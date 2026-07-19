@@ -1,0 +1,282 @@
+I'm building a browser-based Excel/CSV data cleaning SaaS tool. Build this exactly as specified below. Do not add authentication, login, user accounts, billing, or subscription logic — none of that exists yet and should not be scaffolded. Focus only on the core product functionality.
+
+---
+
+## 0. Hard Constraints (read first, apply everywhere)
+
+- **No platform-specific dependencies.** Do not use Replit DB, Replit Auth, Replit Object Storage, or any Replit-only SDK. This app must run unchanged after I `git push` this repo and deploy it on Render or Vercel later.
+- **All configuration via environment variables** (`.env` file, read via `os.environ` / `process.env`), never hardcoded, never via Replit's proprietary secrets UI as a dependency.
+- **Stateless file processing.** Uploaded files are processed in memory or in a temp directory for the duration of the session only. Never persist uploaded file contents to disk long-term or to a database. This is a core product promise ("we never store your spreadsheet data") — treat it as an architectural requirement, not just a policy line.
+- **Standard, widely-used libraries only** — nothing exotic, nothing that only works inside Replit's container.
+- **Build the entire product in one continuous pass, end to end.** Section 7 lists the feature modules in a sensible dependency order (each one builds on the data models and review-queue mechanism established by the ones before it) — follow that order internally, but do not stop or wait for confirmation between modules. Deliver the complete, fully wired product described in this document in a single build.
+- Self-check against every acceptance criterion in Section 7 as you go, and fix anything that doesn't meet it before considering the build finished — don't move on to the next module with a known-broken one underneath it.
+
+---
+
+## 1. Locked Tech Stack
+
+**Frontend**
+- React 18 + TypeScript + Vite
+- Tailwind CSS for styling
+- TanStack Table (`@tanstack/react-table`) for the virtualized data grid
+- `xlsx` (SheetJS) and `papaparse` for client-side preview parsing
+- `zustand` for lightweight client state (session state, review queue, undo history)
+
+**Backend**
+- Python 3.11+ with FastAPI
+- `pandas` for data manipulation
+- `pandera` for schema/validation rule execution
+- `openpyxl` for `.xlsx` read/write (via pandas), `python-multipart` for file uploads
+- `uvicorn` as the ASGI server
+
+**AI layer**
+- All LLM calls go through a single module: `backend/ai/suggestion_engine.py`, exposing one function signature regardless of provider:
+  ```python
+  def get_suggestions(column_name: str, sample_values: list, stats: dict, context: dict) -> list[Suggestion]
+  ```
+- Use the Anthropic API (`anthropic` Python SDK) as the default provider, but keep the provider call isolated in this one module so it can be swapped later without touching any other file.
+- API key read from `ANTHROPIC_API_KEY` env var.
+
+**Dev/run setup**
+- Frontend runs on Vite dev server (port 5173 in dev)
+- Backend runs on `uvicorn main:app --host 0.0.0.0 --port 8000`
+- Frontend calls backend via a configurable base URL (`VITE_API_BASE_URL` env var) — never hardcode `localhost` in a way that breaks when deployed
+- Include a root `README.md` with exact run instructions for both local/Replit and a future Render/Vercel deploy
+
+---
+
+## 2. Folder Structure
+
+```
+/
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── UploadZone.tsx
+│   │   │   ├── SessionSummary.tsx
+│   │   │   ├── DataGrid.tsx
+│   │   │   ├── ReviewQueue.tsx
+│   │   │   ├── ColumnInspector.tsx
+│   │   │   ├── IssuesReport.tsx
+│   │   │   ├── RecipePanel.tsx
+│   │   │   └── NLCommandBar.tsx
+│   │   ├── store/
+│   │   │   └── sessionStore.ts
+│   │   ├── api/
+│   │   │   └── client.ts
+│   │   ├── types/
+│   │   │   └── models.ts
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── package.json
+│   └── vite.config.ts
+├── backend/
+│   ├── main.py
+│   ├── routers/
+│   │   ├── upload.py
+│   │   ├── analyze.py
+│   │   ├── apply.py
+│   │   └── export.py
+│   ├── engine/
+│   │   ├── structure_detection.py
+│   │   ├── type_inference.py
+│   │   ├── formatting.py
+│   │   ├── deduplication.py
+│   │   ├── missing_values.py
+│   │   ├── validation.py
+│   │   └── recipe.py
+│   ├── ai/
+│   │   └── suggestion_engine.py
+│   ├── models/
+│   │   └── schemas.py
+│   ├── requirements.txt
+│   └── config.py
+├── .env.example
+└── README.md
+```
+
+---
+
+## 3. Core Data Models
+
+Define these as Pydantic models in `backend/models/schemas.py` and mirrored TypeScript types in `frontend/src/types/models.ts`. Keep them in sync exactly.
+
+```python
+class ColumnProfile(BaseModel):
+    name: str
+    inferred_type: Literal["string", "integer", "float", "datetime", "boolean", "categorical"]
+    null_count: int
+    unique_count: int
+    sample_values: list[str]
+    stats: dict  # min/max/mean for numeric, top values for categorical, etc.
+
+class Suggestion(BaseModel):
+    id: str
+    row_index: int | None      # null for column-level suggestions
+    column_name: str
+    original_value: str | None
+    proposed_value: str | None
+    reason: str
+    category: Literal["type_fix", "format", "duplicate", "missing_value", "validation", "structure"]
+    status: Literal["pending", "accepted", "rejected", "edited"]
+
+class TableDetectionResult(BaseModel):
+    sheet_name: str
+    tables: list[dict]   # each: {start_row, end_row, start_col, end_col, header_row, confidence}
+
+class Session(BaseModel):
+    session_id: str
+    original_filename: str
+    sheets: list[str]
+    columns: list[ColumnProfile]
+    suggestions: list[Suggestion]
+    recipe_steps: list[dict]
+    created_at: datetime
+    # NOTE: no file bytes stored on this model persisted anywhere — file lives only
+    # in an in-memory cache keyed by session_id, expired after N minutes of inactivity
+
+class RecipeStep(BaseModel):
+    step_id: str
+    module: Literal["structure", "type", "format", "dedup", "missing", "validation"]
+    description: str          # human-readable, e.g. "Standardize 'state' column to Title Case"
+    params: dict               # machine-readable parameters to replay this step
+```
+
+---
+
+## 4. API Contract
+
+All endpoints under `/api`. JSON in/out except upload/export which use file bodies.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/api/upload` | Accept file upload, return `session_id` + list of detected sheets |
+| `POST` | `/api/sessions/{session_id}/detect-structure` | Run structure/table/header detection on a chosen sheet, return `TableDetectionResult` |
+| `POST` | `/api/sessions/{session_id}/analyze` | Run type inference, missing-value scan, dedup scan, and generate `Suggestion[]` |
+| `GET` | `/api/sessions/{session_id}/suggestions` | Return current suggestion queue (with status filters via query params) |
+| `POST` | `/api/sessions/{session_id}/suggestions/{suggestion_id}` | Accept/reject/edit a single suggestion. Body: `{ "status": "accepted" \| "rejected" \| "edited", "edited_value": optional }` |
+| `POST` | `/api/sessions/{session_id}/suggestions/bulk` | Bulk accept/reject by category or column. Body: `{ "category": ..., "column_name": optional, "status": ... }` |
+| `POST` | `/api/sessions/{session_id}/nl-command` | Submit a natural language instruction, return a preview of proposed changes (not yet applied) |
+| `POST` | `/api/sessions/{session_id}/nl-command/confirm` | Apply a previously previewed NL command |
+| `GET` | `/api/sessions/{session_id}/preview` | Return current grid state (paginated/windowed for large files) |
+| `GET` | `/api/sessions/{session_id}/recipe` | Return the full ordered list of `RecipeStep` taken so far |
+| `POST` | `/api/sessions/{session_id}/recipe/apply-to-new-file` | Apply an existing recipe to a newly uploaded file with matching/similar schema |
+| `GET` | `/api/sessions/{session_id}/export` | Return the cleaned file (`.xlsx` or `.csv`, via query param `format`) |
+| `GET` | `/api/sessions/{session_id}/issues-report` | Return the Issues Report as a downloadable sheet/file |
+| `DELETE` | `/api/sessions/{session_id}` | Explicitly purge session from memory (also auto-expire after inactivity) |
+
+---
+
+## 5. Feature Modules — Implementation Detail
+
+### 5.1 Structure Detection (`engine/structure_detection.py`)
+- Use pandas + openpyxl to read raw sheet grid (not `read_excel` directly first — read as raw cells to detect layout before assuming a header row)
+- Heuristics: a row is a likely header if it has high text-density and the row below has a type shift (e.g., text header → numeric data)
+- Detect table boundaries via runs of blank rows/columns as separators
+- Detect merged cells via openpyxl's `merged_cells` and propagate the top-left value to all cells in the merged range
+- Return confidence score per detected table so the UI can flag low-confidence detections for manual review
+
+### 5.2 Type Inference (`engine/type_inference.py`)
+- For each column: attempt numeric coercion, then datetime coercion (try a ranked list of common formats), then boolean coercion, fall back to string/categorical
+- Categorical vs. free-text string distinction: if unique_count / total_count < 0.5 and unique_count < 50, treat as categorical
+- Return per-column `ColumnProfile` with stats
+
+### 5.3 Formatting (`engine/formatting.py`)
+- Whitespace: strip + collapse internal double-spaces, strip non-printable/control characters
+- Case standardization: expose as a column-level user-selectable transform (upper/lower/title/sentence), never auto-applied without suggestion approval
+- Currency/number cleanup: strip symbols and thousands separators via regex before numeric coercion, log what was stripped
+- Date normalization: parse to `datetime`, re-emit in one consistent ISO format unless user specifies another
+- Email/phone/URL: validate against standard regex patterns, flag non-conforming values as suggestions rather than silently dropping them
+
+### 5.4 Deduplication (`engine/deduplication.py`)
+- Exact duplicates: pandas `duplicated()` on user-selected key columns (default: all columns)
+- Near-duplicates: normalize (lowercase, strip, remove punctuation) into a helper column, then flag matches; use `rapidfuzz` for fuzzy string similarity (threshold configurable, default 90)
+- Categorical canonicalization: cluster similar values (e.g., via `rapidfuzz.process`) and propose one canonical label per cluster, shown to the user before merging
+
+### 5.5 Missing Values (`engine/missing_values.py`)
+- Report missing rate per column
+- Strategies exposed per column: mean/median/mode fill, forward-fill, custom constant, sentinel tag (e.g., `"N/A"`), or drop row
+- Never apply a fill without it appearing in the suggestion/review queue first
+
+### 5.6 Validation (`engine/validation.py`)
+- Auto-generate `pandera` schema checks per column based on inferred type + observed range/allowed values
+- Surface each generated rule to the user as editable/removable before enforcement
+- Run checks, emit violations as `Suggestion` objects with category `validation`
+
+### 5.7 Recipe Engine (`engine/recipe.py`)
+- Every accepted suggestion or applied NL command appends a `RecipeStep` to the session
+- Recipe must be replayable: given a new file with a similar (fuzzy-matched) schema, re-run the same ordered steps against the new columns
+- Export recipe as JSON and as a human-readable markdown summary
+
+### 5.8 Natural Language Commands (`ai/suggestion_engine.py` + `routers/apply.py`)
+- Parse instruction → structured intent (e.g., `{"action": "split_column", "source": "Full Name", "targets": ["First Name", "Last Name"], "delimiter": " "}`) via the LLM
+- Always return a **preview** of the resulting change (sample of affected rows, before/after) before actually applying — never execute a NL command blind
+- If the LLM's parsed intent is ambiguous or low-confidence, return a clarifying question instead of guessing
+
+---
+
+## 6. Frontend UX Requirements
+
+- **Upload → Structure Preview → Review Queue → Export** as the primary flow, completable in under a minute for a simple file
+- `DataGrid.tsx`: virtualized rendering (only visible rows in DOM), frozen header row, column resize, sort/filter, before/after toggle
+- `ReviewQueue.tsx`: every suggestion shown as original → proposed → reason, with accept/reject/edit controls; bulk actions by category or column
+- `ColumnInspector.tsx`: click a column header to see its profile (type, null%, unique count, top values) and per-column strategy controls (missing-value strategy, case standardization, etc.)
+- `IssuesReport.tsx`: read-only exportable summary of every flagged issue and its resolution
+- `RecipePanel.tsx`: shows the ordered recipe steps taken so far, with an "apply this recipe to a new file" upload target
+- `NLCommandBar.tsx`: free-text input, shows a preview panel before confirming
+- Loading states must describe the actual operation ("Scanning column types…", "Checking 4,213 rows against validation rules…"), never a generic spinner
+- Non-destructive: all edits are undoable; keep an in-memory undo/redo stack of recipe steps
+
+---
+
+## 7. Build Order (build all of this in one pass — no stopping between steps)
+
+Build these modules in this order, since each depends on data models or UI mechanisms established by the ones before it. Wire every module into the same session, review queue, and grid as you go, so the final result is one fully integrated product, not separate disconnected pieces.
+
+**Step 1 — Ingestion + Structure Detection**
+Build: file upload, sheet/table/header detection, session creation, basic grid preview.
+✅ Must satisfy: uploading a messy multi-table Excel file shows detected table boundaries and header rows correctly highlighted in the grid, with a confidence indicator.
+
+**Step 2 — Type Inference + Formatting + Review Queue**
+Build: column profiling, type inference, whitespace/case/date/currency suggestions, and the review queue UI (accept/reject/edit, before/after toggle).
+✅ Must satisfy: per-column type/profile info is visible, formatting suggestions appear, and can be accepted/rejected individually and in bulk, with the grid updating live.
+
+**Step 3 — Deduplication + Missing Values**
+Build: exact + fuzzy dedup detection, categorical canonicalization, missing-value detection and per-column strategy application — all flowing through the same review queue built in Step 2.
+✅ Must satisfy: a file with duplicate rows, near-duplicate categorical labels, and missing values produces correct suggestions in the queue, each with a clear reason.
+
+**Step 4 — Validation Engine**
+Build: auto-generated expectations per column, editable before enforcement, violations surfaced as suggestions.
+✅ Must satisfy: auto-generated rules (e.g., "rating between 1–5") appear, can be edited/removed, and violations show up correctly with suggested fixes.
+
+**Step 5 — Export + Issues Report**
+Build: export cleaned file as .xlsx/.csv, generate Issues Report as a separate sheet/file.
+✅ Must satisfy: exported file reflects all accepted changes; Issues Report accurately lists every flagged-and-resolved (or flagged-and-skipped) item.
+
+**Step 6 — Recipes**
+Build: recipe recording, JSON + markdown export, "apply recipe to new file" flow with schema matching.
+✅ Must satisfy: re-uploading a similar file and applying a saved recipe correctly replays the same cleaning steps without re-asking every question.
+
+**Step 7 — Natural Language Commands**
+Build: NL instruction parsing, preview-before-apply flow, clarifying-question fallback for ambiguous commands.
+✅ Must satisfy: common commands ("split full name", "remove rows where status is cancelled") produce a correct preview and apply correctly on confirmation.
+
+**Step 8 — Performance Hardening**
+Build: chunked parsing and virtualization tuning for large files (100k+ rows), async processing with real progress states.
+✅ Must satisfy: a 100k-row file loads, analyzes, and remains scrollable without freezing the browser tab.
+
+Once all 8 steps are built and wired together, do a final end-to-end pass: upload a realistically messy file, run it through the whole flow from upload to export, and confirm every module works together, not just in isolation.
+
+---
+
+## 8. Explicit Exclusions (do not build these yet)
+
+- No login/signup, no user accounts
+- No subscription/billing/payment logic
+- No role-based permissions
+- No persistent database of past sessions/files beyond in-memory/temp processing for the active session
+- No third-party integrations (Zapier, API keys for external customers) — API contract above is internal-only for now
+
+---
+
+Build the complete product now — all 8 steps, fully wired together end to end — and show me the finished result.

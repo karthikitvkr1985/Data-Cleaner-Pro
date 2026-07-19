@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "DataClean – Excel/CSV Cleaning Tool"
+version = "1.0.0"
+id = "artifacts/data-cleaner"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24805
+
+[services.development]
+run = "pnpm --filter @workspace/data-cleaner run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/data-cleaner", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/data-cleaner/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24805"
+BASE_PATH = "/"

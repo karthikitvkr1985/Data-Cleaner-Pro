@@ -1,0 +1,3 @@
+- [Python venv setup](python-venv.md) — packages live in .venv (uv venv); workflow must use absolute path /home/runner/workspace/.venv/bin/uvicorn
+- [api-zod index.ts codegen](api-zod-codegen.md) — Orval regenerates lib/api-zod/src/index.ts each run; must overwrite after orval to remove ./generated/types export
+- [DataClean architecture](dataclean-arch.md) — FastAPI backend in backend/, React frontend in artifacts/data-cleaner/, stateless in-memory sessions

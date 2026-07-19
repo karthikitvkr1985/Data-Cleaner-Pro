@@ -3,20 +3,32 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: DataClean – Excel/CSV Data Cleaning API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: upload
+    description: File upload operations
+  - name: sessions
+    description: Session management
+  - name: suggestions
+    description: Suggestion review queue
+  - name: nl
+    description: Natural language commands
+  - name: export
+    description: Export operations
+  - name: recipe
+    description: Recipe management
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,7 +36,395 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /upload:
+    post:
+      operationId: uploadFile
+      tags: [upload]
+      summary: Upload an Excel or CSV file and create a session
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUploadInput"
+      responses:
+        "200":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+        "400":
+          description: Invalid file
+
+  /sessions/{session_id}:
+    get:
+      operationId: getSession
+      tags: [sessions]
+      summary: Get session metadata
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Session info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionInfo"
+        "404":
+          description: Session not found
+    delete:
+      operationId: deleteSession
+      tags: [sessions]
+      summary: Delete and purge a session from memory
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/detect-structure:
+    post:
+      operationId: detectStructure
+      tags: [sessions]
+      summary: Run table/header structure detection on a chosen sheet
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StructureDetectInput"
+      responses:
+        "200":
+          description: Table detection result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TableDetectionResult"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/analyze:
+    post:
+      operationId: analyzeSession
+      tags: [sessions]
+      summary: Run type inference, formatting scan, dedup scan, and generate suggestions
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Analysis complete with column profiles and suggestions
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalysisResult"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/suggestions:
+    get:
+      operationId: getSuggestions
+      tags: [suggestions]
+      summary: Return the suggestion queue with optional filters
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, accepted, rejected, edited]
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [type_fix, format, duplicate, missing_value, validation, structure]
+        - name: column_name
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Suggestion list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuggestionList"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/suggestions/{suggestion_id}:
+    post:
+      operationId: updateSuggestion
+      tags: [suggestions]
+      summary: Accept, reject, or edit a single suggestion
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: suggestion_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SuggestionUpdateInput"
+      responses:
+        "200":
+          description: Updated suggestion
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplyResult"
+        "404":
+          description: Not found
+
+  /sessions/{session_id}/suggestions/bulk:
+    post:
+      operationId: bulkUpdateSuggestions
+      tags: [suggestions]
+      summary: Bulk accept or reject suggestions by category or column
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkSuggestionInput"
+      responses:
+        "200":
+          description: Bulk update result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BulkApplyResult"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/nl-command:
+    post:
+      operationId: submitNLCommand
+      tags: [nl]
+      summary: Submit a natural language instruction and get a preview of proposed changes
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NLCommandInput"
+      responses:
+        "200":
+          description: Preview of proposed changes (not yet applied)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NLCommandPreview"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/nl-command/confirm:
+    post:
+      operationId: confirmNLCommand
+      tags: [nl]
+      summary: Apply a previously previewed NL command
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NLCommandConfirmInput"
+      responses:
+        "200":
+          description: NL command applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NLConfirmResult"
+        "404":
+          description: Session or preview not found
+
+  /sessions/{session_id}/preview:
+    get:
+      operationId: getPreview
+      tags: [sessions]
+      summary: Return current grid state (paginated)
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            default: 100
+        - name: show_original
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        "200":
+          description: Paginated grid data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PagedPreview"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/recipe:
+    get:
+      operationId: getRecipe
+      tags: [recipe]
+      summary: Return the full ordered list of recipe steps taken so far
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Recipe export
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeExport"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/recipe/apply-to-new-file:
+    post:
+      operationId: applyRecipeToNewFile
+      tags: [recipe]
+      summary: Upload a new file and apply the current session's recipe to it
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/RecipeFileInput"
+      responses:
+        "200":
+          description: New session created with recipe applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecipeApplyResult"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/export:
+    get:
+      operationId: exportSession
+      tags: [export]
+      summary: Return the cleaned file as xlsx or csv
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [xlsx, csv]
+            default: xlsx
+      responses:
+        "200":
+          description: Cleaned file download
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/issues-report:
+    get:
+      operationId: getIssuesReport
+      tags: [export]
+      summary: Return the Issues Report as JSON
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Issues report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IssuesReport"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/validation-rules:
+    get:
+      operationId: getValidationRules
+      tags: [sessions]
+      summary: Get auto-generated validation rules for the session
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Validation rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationRuleList"
+        "404":
+          description: Session not found
+
+  /sessions/{session_id}/validation-rules/{rule_id}:
+    patch:
+      operationId: updateValidationRule
+      tags: [sessions]
+      summary: Update or remove a validation rule
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+        - name: rule_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ValidationRuleUpdate"
+      responses:
+        "200":
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationRule"
+        "404":
+          description: Not found
+
 components:
+  parameters:
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +434,408 @@ components:
       required:
         - status
 
+    ColumnProfile:
+      type: object
+      required: [name, inferred_type, null_count, unique_count, sample_values, stats]
+      properties:
+        name:
+          type: string
+        inferred_type:
+          type: string
+          enum: [string, integer, float, datetime, boolean, categorical]
+        null_count:
+          type: integer
+        unique_count:
+          type: integer
+        total_count:
+          type: integer
+        sample_values:
+          type: array
+          items:
+            type: string
+        stats:
+          type: object
+          additionalProperties: true
+
+    TableInfo:
+      type: object
+      required: [start_row, end_row, start_col, end_col, confidence]
+      properties:
+        start_row:
+          type: integer
+        end_row:
+          type: integer
+        start_col:
+          type: integer
+        end_col:
+          type: integer
+        header_row:
+          type: ["integer", "null"]
+        confidence:
+          type: number
+
+    TableDetectionResult:
+      type: object
+      required: [sheet_name, tables]
+      properties:
+        sheet_name:
+          type: string
+        tables:
+          type: array
+          items:
+            $ref: "#/components/schemas/TableInfo"
+
+    Suggestion:
+      type: object
+      required: [id, column_name, reason, category, status]
+      properties:
+        id:
+          type: string
+        row_index:
+          type: ["integer", "null"]
+        column_name:
+          type: string
+        original_value:
+          type: ["string", "null"]
+        proposed_value:
+          type: ["string", "null"]
+        reason:
+          type: string
+        category:
+          type: string
+          enum: [type_fix, format, duplicate, missing_value, validation, structure]
+        status:
+          type: string
+          enum: [pending, accepted, rejected, edited]
+
+    RecipeStep:
+      type: object
+      required: [step_id, module, description, params]
+      properties:
+        step_id:
+          type: string
+        module:
+          type: string
+          enum: [structure, type, format, dedup, missing, validation, nl]
+        description:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+
+    ValidationRule:
+      type: object
+      required: [rule_id, column_name, rule_type, description, enabled]
+      properties:
+        rule_id:
+          type: string
+        column_name:
+          type: string
+        rule_type:
+          type: string
+        description:
+          type: string
+        params:
+          type: object
+          additionalProperties: true
+        enabled:
+          type: boolean
+
+    ValidationRuleList:
+      type: object
+      required: [rules]
+      properties:
+        rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationRule"
+
+    SessionInfo:
+      type: object
+      required: [session_id, original_filename, sheets, columns, suggestions, recipe_steps, created_at]
+      properties:
+        session_id:
+          type: string
+        original_filename:
+          type: string
+        sheets:
+          type: array
+          items:
+            type: string
+        selected_sheet:
+          type: ["string", "null"]
+        columns:
+          type: array
+          items:
+            $ref: "#/components/schemas/ColumnProfile"
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Suggestion"
+        recipe_steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeStep"
+        created_at:
+          type: string
+          format: date-time
+
+    UploadResult:
+      type: object
+      required: [session_id, sheets, original_filename]
+      properties:
+        session_id:
+          type: string
+        sheets:
+          type: array
+          items:
+            type: string
+        original_filename:
+          type: string
+
+    FileUploadInput:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+
+    RecipeFileInput:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+
+    StructureDetectInput:
+      type: object
+      required: [sheet_name]
+      properties:
+        sheet_name:
+          type: string
+        header_row:
+          type: ["integer", "null"]
+        start_row:
+          type: ["integer", "null"]
+
+    SuggestionUpdateInput:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [accepted, rejected, edited]
+        edited_value:
+          type: ["string", "null"]
+
+    BulkSuggestionInput:
+      type: object
+      required: [status]
+      properties:
+        category:
+          type: ["string", "null"]
+        column_name:
+          type: ["string", "null"]
+        status:
+          type: string
+          enum: [accepted, rejected]
+
+    NLCommandInput:
+      type: object
+      required: [instruction]
+      properties:
+        instruction:
+          type: string
+
+    NLCommandPreview:
+      type: object
+      required: [preview_id, description, intent, sample_before, sample_after, affected_count]
+      properties:
+        preview_id:
+          type: string
+        description:
+          type: string
+        intent:
+          type: object
+          additionalProperties: true
+        sample_before:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        sample_after:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        affected_count:
+          type: integer
+        clarification_needed:
+          type: ["string", "null"]
+
+    NLCommandConfirmInput:
+      type: object
+      required: [preview_id]
+      properties:
+        preview_id:
+          type: string
+
+    PagedPreview:
+      type: object
+      required: [rows, total_rows, page, page_size, columns]
+      properties:
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+        total_rows:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        columns:
+          type: array
+          items:
+            type: string
+        original_rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    IssueItem:
+      type: object
+      required: [suggestion_id, column_name, category, description, resolution]
+      properties:
+        suggestion_id:
+          type: string
+        row_index:
+          type: ["integer", "null"]
+        column_name:
+          type: string
+        category:
+          type: string
+        original_value:
+          type: ["string", "null"]
+        proposed_value:
+          type: ["string", "null"]
+        description:
+          type: string
+        resolution:
+          type: string
+
+    IssuesReport:
+      type: object
+      required: [session_id, issues, generated_at]
+      properties:
+        session_id:
+          type: string
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/IssueItem"
+        generated_at:
+          type: string
+          format: date-time
+        summary:
+          type: object
+          additionalProperties: true
+
+    RecipeExport:
+      type: object
+      required: [session_id, steps, markdown]
+      properties:
+        session_id:
+          type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/RecipeStep"
+        markdown:
+          type: string
+
+    AnalysisResult:
+      type: object
+      required: [columns, suggestions]
+      properties:
+        columns:
+          type: array
+          items:
+            $ref: "#/components/schemas/ColumnProfile"
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Suggestion"
+
+    SuggestionList:
+      type: object
+      required: [suggestions, total]
+      properties:
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Suggestion"
+        total:
+          type: integer
+
+    ApplyResult:
+      type: object
+      required: [suggestion, applied]
+      properties:
+        suggestion:
+          $ref: "#/components/schemas/Suggestion"
+        applied:
+          type: boolean
+
+    BulkApplyResult:
+      type: object
+      required: [updated_count, suggestions]
+      properties:
+        updated_count:
+          type: integer
+        suggestions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Suggestion"
+
+    NLConfirmResult:
+      type: object
+      required: [applied, recipe_step]
+      properties:
+        applied:
+          type: boolean
+        recipe_step:
+          $ref: "#/components/schemas/RecipeStep"
+
+    RecipeApplyResult:
+      type: object
+      required: [new_session_id, steps_applied, steps_skipped]
+      properties:
+        new_session_id:
+          type: string
+        steps_applied:
+          type: integer
+        steps_skipped:
+          type: integer
+
+    ValidationRuleUpdate:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        params:
+          type: object
+          additionalProperties: true
+        description:
+          type: string
+
+    DeleteResult:
+      type: object
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean
