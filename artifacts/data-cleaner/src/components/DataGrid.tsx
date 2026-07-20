@@ -116,7 +116,8 @@ export function DataGrid() {
           </div>
         );
       },
-      size: 150,
+      minSize: 120,
+      size: 200,
     }));
   }, [columns, previewData?.columns, suggestionMap]);
 
@@ -238,7 +239,7 @@ export function DataGrid() {
                     ? 'bg-primary/10 text-primary border-primary/30'
                     : 'text-muted-foreground',
                 ].join(' ')}
-                style={{ width: header.getSize(), minWidth: 80 }}
+                style={{ flex: '1 1 0%', minWidth: 120, maxWidth: 400 }}
               >
                 {flexRender(header.column.columnDef.header, header.getContext())}
               </div>
@@ -279,7 +280,7 @@ export function DataGrid() {
                   <div
                     key={cell.id}
                     className="border-r border-border/30 flex items-center overflow-hidden"
-                    style={{ width: cell.column.getSize(), minWidth: 80 }}
+                    style={{ flex: '1 1 0%', minWidth: 120, maxWidth: 400 }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>

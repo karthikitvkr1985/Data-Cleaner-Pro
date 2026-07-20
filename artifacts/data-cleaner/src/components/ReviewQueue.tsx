@@ -57,8 +57,16 @@ export function ReviewQueue() {
     queryClient.invalidateQueries({ queryKey: getGetPreviewQueryKey(sessionId!) });
   };
 
+  const onError = (err: any) => {
+    toast({
+      title: 'Something went wrong',
+      description: err?.message ?? 'Could not reach the server. Please try again.',
+      variant: 'destructive',
+    });
+  };
+
   const updateMutation = useUpdateSuggestion({
-    mutation: { onSuccess: invalidate },
+    mutation: { onSuccess: invalidate, onError },
   } as any);
 
   const bulkMutation = useBulkUpdateSuggestions({
@@ -76,6 +84,7 @@ export function ReviewQueue() {
           description: `Switch to "Pending" tab to see what's still waiting.`,
         });
       },
+      onError,
     },
   } as any);
 
