@@ -104,12 +104,12 @@ export function QualityDashboard() {
         <h2 className="text-lg font-bold text-foreground">Data Quality Dashboard</h2>
       </div>
 
-      <div className={`relative overflow-hidden rounded-xl border-2 p-6 text-center transition-colors ${
+      <div className={`relative overflow-hidden rounded-xl border-2 p-4 text-center transition-colors ${
         quality.overall_score >= 90 ? 'border-emerald-500/30 bg-emerald-500/5'
           : quality.overall_score >= 70 ? 'border-amber-500/30 bg-amber-500/5'
           : 'border-red-500/30 bg-red-500/5'
       }`}>
-        <div className={`text-4xl sm:text-5xl font-black tracking-tight ${scoreColor}`}>
+        <div className={`text-2xl sm:text-3xl font-black tracking-tight ${scoreColor}`}>
           {quality.overall_score.toFixed(1)}
         </div>
         <div className="text-xs sm:text-sm text-muted-foreground mt-1">Overall Data Quality Score</div>
