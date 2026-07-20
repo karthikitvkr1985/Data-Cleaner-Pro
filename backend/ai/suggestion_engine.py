@@ -207,7 +207,7 @@ def _rule_based_preview(
     description = instruction
 
     # Split column detection
-    split_match = re.search(r"split\s+['"]?(\w[\w\s]*)['"]?\s+(?:by|on|using|into)\s+(.+)", lower)
+    split_match = re.search(r"""split\s+['"]?(\w[\w\s]*)['"]?\s+(?:by|on|using|into)\s+(.+)""", lower)
     if split_match:
         source = _find_col(split_match.group(1).strip(), col_names)
         delimiter_part = split_match.group(2).strip()
@@ -217,14 +217,14 @@ def _rule_based_preview(
         )
         if source:
             # Guess target names from instruction or use First/Last
-            targets_match = re.findall(r"['"](\w[\w\s]*)['"]", instruction)
+            targets_match = re.findall(r"""['"](\w[\w\s]*)['"]""", instruction)
             targets = targets_match if len(targets_match) >= 2 else [source + "_1", source + "_2"]
             intent = {"action": "split_column", "source": source, "targets": targets[:2], "delimiter": delimiter}
             description = f"Split '{source}' into {targets} by '{delimiter}'"
 
     # Filter/remove rows
     elif re.search(r"(remove|delete|filter|drop)\s+rows?\s+where", lower):
-        col_match = re.search(r"where\s+['"]?(\w[\w\s]*)['"]?\s+(is|equals?|=|contains?)\s+['"]?([^'"]+)['"]?", lower)
+        col_match = re.search(r"""where\s+['"]?(\w[\w\s]*)['"]?\s+(is|equals?|=|contains?)\s+['"]?([^'"]+)['"]?""", lower)
         if col_match:
             col = _find_col(col_match.group(1).strip(), col_names)
             op_word = col_match.group(2).strip()
@@ -235,8 +235,8 @@ def _rule_based_preview(
                 description = f"Remove rows where '{col}' {op} '{val}'"
 
     # Rename column
-    elif re.search(r"rename\s+['"]?(\w[\w\s]*)['"]?\s+to\s+['"]?(\w[\w\s]*)['"]?", lower):
-        m = re.search(r"rename\s+['"]?(\w[\w\s]*)['"]?\s+to\s+['"]?(\w[\w\s]*)['"]?", lower)
+    elif re.search(r"""rename\s+['"]?(\w[\w\s]*)['"]?\s+to\s+['"]?(\w[\w\s]*)['"]?""", lower):
+        m = re.search(r"""rename\s+['"]?(\w[\w\s]*)['"]?\s+to\s+['"]?(\w[\w\s]*)['"]?""", lower)
         if m:
             old = _find_col(m.group(1).strip(), col_names)
             new = m.group(2).strip()
@@ -249,7 +249,7 @@ def _rule_based_preview(
         col_found = _find_col_in_text(lower, col_names)
         strategy = "mean" if "mean" in lower else ("median" if "median" in lower else
                    "mode" if "mode" in lower else "constant")
-        val_match = re.search(r"with\s+['"]?([^'"]+)['"]?$", lower)
+        val_match = re.search(r"""with\s+['"]?([^'"]+)['"]?$""", lower)
         val = val_match.group(1).strip() if val_match else "0"
         intent = {
             "action": "fill_nulls",
