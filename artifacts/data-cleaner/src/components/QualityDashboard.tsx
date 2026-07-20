@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { useSessionStore } from '../store/sessionStore';
 import { useGetQualityScore, useGetOutliers, useGetAnomalies, useGetConsistencyIssues, useGetSchemaMeanings } from '@workspace/api-client-react';
-import { AlertTriangle, TrendingUp, ChevronDown, ChevronRight, FileSearch, BarChart3, Database, CheckCircle, Search } from 'lucide-react';
+import { AlertTriangle, TrendingUp, ChevronDown, ChevronRight, FileSearch, BarChart3, Database, Search, RefreshCw } from 'lucide-react';
 
 const DIM_COLORS = [
   'bg-emerald-500', 'bg-blue-500', 'bg-violet-500', 'bg-amber-500',
@@ -13,7 +13,7 @@ export function QualityDashboard() {
   const [showAllMeanings, setShowAllMeanings] = useState(false);
   const [schemaSearch, setSchemaSearch] = useState('');
 
-  const { data: quality, isLoading: qLoading, isError } = useGetQualityScore(sessionId!, { query: { enabled: !!sessionId } });
+  const { data: quality, isLoading: qLoading, isError, error } = useGetQualityScore(sessionId!, { query: { enabled: !!sessionId } });
   const { data: outliers } = useGetOutliers(sessionId!, { query: { enabled: !!sessionId } });
   const { data: anomalies } = useGetAnomalies(sessionId!, { query: { enabled: !!sessionId } });
   const { data: consistency } = useGetConsistencyIssues(sessionId!, { query: { enabled: !!sessionId } });
@@ -29,12 +29,6 @@ export function QualityDashboard() {
     const q = schemaSearch.toLowerCase();
     return meanings.filter(m => m.column_name.toLowerCase().includes(q) || m.inferred_meaning.toLowerCase().includes(q));
   }, [meanings, schemaSearch]);
-
-  const scoreColor = quality?.overall_score != null
-    ? quality.overall_score >= 90 ? 'text-emerald-500'
-      : quality.overall_score >= 70 ? 'text-amber-500'
-      : 'text-red-500'
-    : 'text-muted-foreground';
 
   if (!sessionId) {
     return (
@@ -62,11 +56,14 @@ export function QualityDashboard() {
   }
 
   if (isError) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
         <div>
           <AlertTriangle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">Failed to load quality data. Please re-analyze your file.</p>
+          <p className="text-sm text-muted-foreground">Failed to load quality data.</p>
+          <p className="text-[10px] text-muted-foreground/50 mt-1 max-w-[280px] leading-relaxed">{errMsg}</p>
+          <p className="text-[10px] text-muted-foreground/50 mt-2">Upload and analyze a file first, then try again.</p>
         </div>
       </div>
     );
@@ -76,8 +73,9 @@ export function QualityDashboard() {
     return (
       <div className="flex h-full items-center justify-center p-8 text-center">
         <div>
-          <BarChart3 className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-          <p className="text-sm text-muted-foreground">No quality data yet. Run analysis first.</p>
+          <RefreshCw className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+          <p className="text-sm text-muted-foreground">No quality data yet.</p>
+          <p className="text-xs text-muted-foreground/60 mt-1">Click "Analyze" on your data first.</p>
         </div>
       </div>
     );
@@ -93,17 +91,19 @@ export function QualityDashboard() {
     ? improvement > 0 ? '▲' : improvement < 0 ? '▼' : '─'
     : '─';
 
+  const scoreColor = quality.overall_score >= 90 ? 'text-emerald-500'
+    : quality.overall_score >= 70 ? 'text-amber-500'
+    : 'text-red-500';
+
   const displayedMeanings = showAllMeanings ? filteredMeanings : filteredMeanings.slice(0, 6);
 
   return (
     <div className="flex flex-col h-full overflow-y-auto p-5 space-y-5">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <TrendingUp className="w-5 h-5 text-primary shrink-0" />
         <h2 className="text-lg font-bold text-foreground">Data Quality Dashboard</h2>
       </div>
 
-      {/* Overall Score Card */}
       <div className={`relative overflow-hidden rounded-xl border-2 p-6 text-center transition-colors ${
         quality.overall_score >= 90 ? 'border-emerald-500/30 bg-emerald-500/5'
           : quality.overall_score >= 70 ? 'border-amber-500/30 bg-amber-500/5'
@@ -128,7 +128,6 @@ export function QualityDashboard() {
         )}
       </div>
 
-      {/* Dimension Scores - Bar Chart */}
       <div className="space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
           <BarChart3 className="w-3.5 h-3.5" />
@@ -154,10 +153,7 @@ export function QualityDashboard() {
                   </div>
                 </div>
                 <div className="w-full bg-muted/50 rounded-full h-2.5 overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`}
-                    style={{ width: `${score}%` }}
-                  />
+                  <div className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`} style={{ width: `${score}%` }} />
                 </div>
                 {dim.description && (
                   <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{dim.description}</p>
@@ -168,7 +164,6 @@ export function QualityDashboard() {
         </div>
       </div>
 
-      {/* Issues Summary */}
       {(totalOutliers > 0 || totalAnomalies > 0 || totalConsistency > 0) && (
         <div className="border-t pt-4 space-y-3">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
@@ -192,7 +187,6 @@ export function QualityDashboard() {
         </div>
       )}
 
-      {/* Schema Meanings */}
       {meanings && meanings.length > 0 && (
         <div className="border-t pt-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -241,13 +235,9 @@ export function QualityDashboard() {
               {showAllMeanings ? 'Show less' : `Show all ${filteredMeanings.length} columns`}
             </button>
           )}
-          {filteredMeanings.length === 0 && schemaSearch && (
-            <p className="text-xs text-muted-foreground italic text-center">No columns match "{schemaSearch}"</p>
-          )}
         </div>
       )}
 
-      {/* Dataset Overview */}
       <div className="border-t pt-4 space-y-3">
         <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
           <Database className="w-3.5 h-3.5 text-emerald-500" />

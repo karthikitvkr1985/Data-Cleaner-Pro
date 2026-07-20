@@ -28,7 +28,7 @@ export function AuditLogViewer() {
   const [actionFilter, setActionFilter] = useState<ActionFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const { data: entries, isLoading } = useGetAuditLog(sessionId!, { query: { enabled: !!sessionId } });
+  const { data: entries, isLoading, isError, error } = useGetAuditLog(sessionId!, { query: { enabled: !!sessionId } });
 
   const filtered = useMemo(() => {
     if (!entries) return [];
@@ -87,6 +87,17 @@ export function AuditLogViewer() {
           <div className="h-7 w-7 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           <span className="text-sm text-muted-foreground animate-pulse">Building audit log...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-8 text-center">
+        <ClipboardList className="w-8 h-8 text-red-500/60 mb-2" />
+        <p className="text-sm text-muted-foreground">Failed to load audit log.</p>
+        <p className="text-[10px] text-muted-foreground/50 mt-1 max-w-[280px] leading-relaxed">{errMsg}</p>
       </div>
     );
   }

@@ -8,7 +8,7 @@ export function CleaningReportViewer() {
   const [rawJson, setRawJson] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<number, boolean>>({});
 
-  const { data: report, isLoading } = useGetCleaningReport(sessionId!, { query: { enabled: !!sessionId } });
+  const { data: report, isLoading, isError, error } = useGetCleaningReport(sessionId!, { query: { enabled: !!sessionId } });
 
   const toggleSection = (i: number) => {
     setExpandedSections(prev => ({ ...prev, [i]: !prev[i] }));
@@ -46,6 +46,17 @@ export function CleaningReportViewer() {
           <div className="h-7 w-7 rounded-full border-2 border-primary border-t-transparent animate-spin" />
           <span className="text-sm text-muted-foreground animate-pulse">Generating report...</span>
         </div>
+      </div>
+    );
+  }
+
+  if (isError) {
+    const errMsg = error instanceof Error ? error.message : 'Unknown error';
+    return (
+      <div className="flex h-full items-center justify-center p-8 text-center">
+        <FileText className="w-8 h-8 text-red-500/60 mx-auto mb-2" />
+        <p className="text-sm text-muted-foreground">Failed to load cleaning report.</p>
+        <p className="text-[10px] text-muted-foreground/50 mt-1 max-w-[280px] leading-relaxed">{errMsg}</p>
       </div>
     );
   }
