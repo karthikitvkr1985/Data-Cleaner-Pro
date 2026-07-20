@@ -27,6 +27,8 @@ if (!basePath) {
   );
 }
 
+const defaultApiPort = process.env.REPL_ID ? 8080 : 8000;
+
 export default defineConfig({
   base: basePath,
   plugins: [
@@ -74,7 +76,7 @@ export default defineConfig({
     },
     proxy: {
       '/api': {
-        target: process.env.API_URL || 'http://localhost:8000',
+        target: process.env.API_URL || `http://localhost:${defaultApiPort}`,
         changeOrigin: true,
       },
     },
@@ -85,7 +87,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: process.env.API_URL || 'http://localhost:8000',
+        target: process.env.API_URL || `http://localhost:${defaultApiPort}`,
         changeOrigin: true,
       },
     },
