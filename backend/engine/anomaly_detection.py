@@ -3,9 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import pandas as pd
-import numpy as np
 
-from backend.models.schemas import ColumnProfile, AnomalyResult
+from backend.models.schemas import AnomalyResult, ColumnProfile
 
 
 def detect_anomalies(
@@ -120,8 +119,6 @@ def _detect_cross_column_anomalies(df: pd.DataFrame, columns: list[ColumnProfile
 
     if not columns or len(df) < 3:
         return anomalies
-
-    col_map = {c.name: c for c in columns}
 
     # Date ordering check
     date_cols = [c.name for c in columns if c.inferred_type == "datetime" and c.name in df.columns]

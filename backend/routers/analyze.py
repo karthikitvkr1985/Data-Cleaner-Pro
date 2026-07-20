@@ -1,29 +1,29 @@
 """Analysis router — structure detection, analyze, suggestions, validation rules."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 from fastapi import APIRouter, HTTPException, Request
 
 from backend.models.schemas import (
     AnalysisResult,
-    SessionInfo,
-    SuggestionList,
-    StructureDetectInput,
-    TableDetectionResult,
-    ValidationRuleList,
-    ValidationRuleUpdate,
-    ValidationRule,
-    DeleteResult,
-    OutlierResult,
     AnomalyResult,
-    ConsistencyIssue,
-    DataQualityScore,
     AuditEntry,
     CleaningReport,
+    ConsistencyIssue,
+    DataQualityScore,
+    DeleteResult,
+    OutlierResult,
     SchemaMeaning,
+    SessionInfo,
+    StructureDetectInput,
+    SuggestionList,
+    TableDetectionResult,
+    ValidationRule,
+    ValidationRuleList,
+    ValidationRuleUpdate,
 )
-from datetime import datetime
 
 if TYPE_CHECKING:
     from backend.main import SessionStore
@@ -115,18 +115,17 @@ async def analyze_session(session_id: str, request: Request) -> AnalysisResult:
         data["selected_sheet"] = sheet
 
     df = data["df"]
-    import uuid
 
-    from backend.engine.type_inference import infer_column_profiles
-    from backend.engine.formatting import generate_formatting_suggestions
-    from backend.engine.deduplication import generate_dedup_suggestions
-    from backend.engine.missing_values import generate_missing_value_suggestions
-    from backend.engine.validation import generate_validation_rules, run_validation
-    from backend.engine.outlier_detection import detect_outliers
     from backend.engine.anomaly_detection import detect_anomalies
     from backend.engine.consistency import check_consistency
+    from backend.engine.deduplication import generate_dedup_suggestions
+    from backend.engine.formatting import generate_formatting_suggestions
+    from backend.engine.missing_values import generate_missing_value_suggestions
+    from backend.engine.outlier_detection import detect_outliers
     from backend.engine.quality_scoring import compute_quality_scores
     from backend.engine.schema_inference import infer_schema_meanings
+    from backend.engine.type_inference import infer_column_profiles
+    from backend.engine.validation import generate_validation_rules, run_validation
 
     columns = infer_column_profiles(df)
     data["columns"] = columns

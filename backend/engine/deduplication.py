@@ -6,8 +6,8 @@ import uuid
 
 import pandas as pd
 
-from backend.models.schemas import ColumnProfile, Suggestion
 from backend.config import FUZZY_DEDUP_THRESHOLD
+from backend.models.schemas import ColumnProfile, Suggestion
 
 
 def _normalize(val: str) -> str:
@@ -75,7 +75,7 @@ def _categorical_canonicalization(df: pd.DataFrame, col: str) -> list[Suggestion
     """Find near-duplicate categorical values and propose canonical labels."""
     suggestions = []
     try:
-        from rapidfuzz import process, fuzz
+        from rapidfuzz import fuzz, process
     except ImportError:
         return []
 

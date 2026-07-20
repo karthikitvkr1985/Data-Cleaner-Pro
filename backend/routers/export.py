@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import StreamingResponse
 
-from backend.models.schemas import IssuesReport, IssueItem, RecipeExport
+from backend.models.schemas import IssueItem, IssuesReport, RecipeExport
 
 if TYPE_CHECKING:
     from backend.main import SessionStore

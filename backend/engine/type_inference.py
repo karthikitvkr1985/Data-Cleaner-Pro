@@ -2,11 +2,9 @@
 from __future__ import annotations
 
 import io
-import re
 from typing import Any
 
 import pandas as pd
-import numpy as np
 
 from backend.models.schemas import ColumnProfile
 

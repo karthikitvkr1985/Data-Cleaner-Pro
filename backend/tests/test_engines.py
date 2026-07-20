@@ -2,31 +2,28 @@
 """Integration tests for all engine modules with a synthetic dataset."""
 from __future__ import annotations
 
-import json
 import os
 import sys
 import uuid
 
-import numpy as np
 import pandas as pd
 import pytest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
 
-from backend.engine.type_inference import infer_column_profiles
-from backend.engine.formatting import generate_formatting_suggestions
-from backend.engine.deduplication import generate_dedup_suggestions
-from backend.engine.missing_values import generate_missing_value_suggestions
-from backend.engine.validation import generate_validation_rules, run_validation
-from backend.engine.outlier_detection import detect_outliers
 from backend.engine.anomaly_detection import detect_anomalies
-from backend.engine.consistency import check_consistency
-from backend.engine.quality_scoring import compute_quality_scores
-from backend.engine.schema_inference import infer_schema_meanings
 from backend.engine.audit import build_audit_log
+from backend.engine.consistency import check_consistency
+from backend.engine.deduplication import generate_dedup_suggestions
+from backend.engine.formatting import generate_formatting_suggestions
+from backend.engine.missing_values import generate_missing_value_suggestions
+from backend.engine.outlier_detection import detect_outliers
+from backend.engine.quality_scoring import compute_quality_scores
 from backend.engine.report import generate_cleaning_report
+from backend.engine.schema_inference import infer_schema_meanings
+from backend.engine.type_inference import infer_column_profiles
+from backend.engine.validation import generate_validation_rules, run_validation
 from backend.models.schemas import RecipeStep
-
 
 # ── Fixtures ──────────────────────────────────────────────────────────────────
 

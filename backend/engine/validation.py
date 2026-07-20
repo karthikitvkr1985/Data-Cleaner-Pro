@@ -1,7 +1,6 @@
 """Validation engine — auto-generate pandera/manual rules and surface violations."""
 from __future__ import annotations
 
-import re
 import uuid
 
 import pandas as pd

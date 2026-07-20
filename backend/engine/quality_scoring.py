@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
 
-import pandas as pd
 import numpy as np
-from datetime import datetime
+import pandas as pd
 
 from backend.models.schemas import ColumnProfile, DataQualityScore, QualityDimension
 
@@ -116,7 +114,6 @@ def _validity_score(df: pd.DataFrame, columns: list[ColumnProfile]) -> QualityDi
 
 
 def _uniqueness_score(df: pd.DataFrame, columns: list[ColumnProfile]) -> QualityDimension:
-    total_potential_duplicates = len(columns)
     duplicate_cols = 0
 
     for i in range(len(columns)):
@@ -131,7 +128,6 @@ def _uniqueness_score(df: pd.DataFrame, columns: list[ColumnProfile]) -> Quality
 
     dup_mask = df.duplicated(keep="first")
     duplicate_rows = int(dup_mask.sum())
-    total_rows_possible = len(df) * 2 if len(columns) > 0 else len(df)
     unique_rows = len(df) - duplicate_rows
     score = round(unique_rows / max(len(df), 1) * 100, 1)
     return QualityDimension(

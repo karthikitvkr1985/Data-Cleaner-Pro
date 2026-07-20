@@ -298,9 +298,9 @@ async def apply_recipe_to_new_file(
     filename = file.filename or "upload"
     ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
 
-    from backend.routers.upload import _detect_sheets
-    from backend.engine.type_inference import load_dataframe
     from backend.engine.recipe import apply_recipe
+    from backend.engine.type_inference import load_dataframe
+    from backend.routers.upload import _detect_sheets
 
     sheets = _detect_sheets(content, ext)
     sheet = sheets[0] if sheets else "Sheet1"

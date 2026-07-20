@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-import re
-from typing import Any
 
 import pandas as pd
-import numpy as np
 
 from backend.models.schemas import ColumnProfile, SchemaMeaning
-
 
 SEMANTIC_KEYWORDS: list[tuple[list[str], str]] = [
     (["id", "uuid", "guid", "identifier", "pk", "primary"], "identifier"),

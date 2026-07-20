@@ -1,18 +1,14 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from typing import Any
 
-import pandas as pd
-import numpy as np
 
 from backend.models.schemas import (
     CleaningReport,
-    ReportSection,
-    WorkflowSummary,
     ColumnProfile,
+    ReportSection,
     Suggestion,
+    WorkflowSummary,
 )
 
 

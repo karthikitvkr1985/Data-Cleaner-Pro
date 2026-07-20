@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import re
 import uuid
-from typing import Any
 
 import pandas as pd
 
@@ -197,7 +196,7 @@ def _find_special_char_issues(series: pd.Series, col: str, df: pd.DataFrame) -> 
             emoji_count += 1
 
     if emoji_count > 0:
-        cleaned_series = series.apply(lambda v: EMOJI_RE.sub("", v))
+        series.apply(lambda v: EMOJI_RE.sub("", v))
         sample_original = next((v for v in series if EMOJI_RE.search(v)), "")
         sample_cleaned = EMOJI_RE.sub("", sample_original)
         if sample_cleaned.strip():

@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import uuid
 from typing import Any
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from backend.models.schemas import ColumnProfile, OutlierResult
 
@@ -36,7 +35,7 @@ def detect_outliers(
         if combined_indices:
             scores: list[float] = []
             for ridx in combined_indices:
-                val = float(series.loc[ridx])
+                float(series.loc[ridx])
                 iqr_flag = ridx in set(o["row_index"] for o in iqr_outliers)
                 zscore_flag = ridx in set(o["row_index"] for o in zscore_outliers)
                 score = 0.5 * (1.0 if iqr_flag else 0.0) + 0.5 * (1.0 if zscore_flag else 0.0)
