@@ -110,7 +110,7 @@ export function CleaningReportViewer() {
       </div>
 
       {rawJson ? (
-        <pre className="text-[10px] text-muted-foreground/70 bg-muted/20 rounded-lg p-4 overflow-x-auto leading-relaxed font-mono">
+        <pre className="text-[10px] text-muted-foreground/70 bg-muted/20 rounded-lg p-4 overflow-x-auto leading-relaxed font-mono whitespace-pre-wrap break-all">
           {JSON.stringify(report, null, 2)}
         </pre>
       ) : (
@@ -121,13 +121,13 @@ export function CleaningReportViewer() {
               <BarChart3 className="w-3.5 h-3.5 text-primary" />
               Workflow Summary
             </h3>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <StatBox label="Suggestions" value={summary.total_suggestions} />
               <StatBox label="Applied" value={summary.applied_count} color="text-emerald-500" />
               <StatBox label="Rejected" value={summary.rejected_count} color="text-red-500" />
               <StatBox label="Pending" value={summary.pending_count} color="text-amber-500" />
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <StatBox label="Operations" value={summary.total_operations} />
               <StatBox label="Outliers" value={summary.outlier_count} color="text-amber-500" />
               <StatBox label="Anomalies" value={summary.anomaly_count} color="text-red-500" />

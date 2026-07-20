@@ -126,12 +126,12 @@ export function RecipePanel() {
                   <div className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
                     {i + 1}
                   </div>
-                  <div className="flex-1 min-w-0 pb-2 border-b border-border/30 last:border-b-0">
+                  <div className="flex-1 min-w-0 pb-2 border-b border-border/30 last:border-b-0 overflow-hidden">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-base leading-none">{meta.icon}</span>
+                      <span className="text-base leading-none shrink-0">{meta.icon}</span>
                       <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{meta.label}</span>
                     </div>
-                    <p className="text-xs text-foreground leading-snug">{step.description}</p>
+                    <p className="text-xs text-foreground leading-snug break-words">{step.description}</p>
                   </div>
                 </div>
               );

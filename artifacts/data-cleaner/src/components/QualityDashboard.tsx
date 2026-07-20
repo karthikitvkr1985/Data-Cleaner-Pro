@@ -109,10 +109,10 @@ export function QualityDashboard() {
           : quality.overall_score >= 70 ? 'border-amber-500/30 bg-amber-500/5'
           : 'border-red-500/30 bg-red-500/5'
       }`}>
-        <div className={`text-6xl font-black tracking-tight ${scoreColor}`}>
+        <div className={`text-4xl sm:text-5xl font-black tracking-tight ${scoreColor}`}>
           {quality.overall_score.toFixed(1)}
         </div>
-        <div className="text-sm text-muted-foreground mt-1">Overall Data Quality Score</div>
+        <div className="text-xs sm:text-sm text-muted-foreground mt-1">Overall Data Quality Score</div>
         <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
           <span>{quality.row_count} rows</span>
           <span className="text-border">·</span>
@@ -164,24 +164,24 @@ export function QualityDashboard() {
         </div>
       </div>
 
-      {(totalOutliers > 0 || totalAnomalies > 0 || totalConsistency > 0) && (
+        {(totalOutliers > 0 || totalAnomalies > 0 || totalConsistency > 0) && (
         <div className="border-t pt-4 space-y-3">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
             Issues Summary
           </h3>
           <div className="grid grid-cols-3 gap-2">
-            <div className="bg-card border rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-amber-500">{totalOutliers}</div>
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Outliers</div>
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-amber-500 truncate">{totalOutliers}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Outliers</div>
             </div>
-            <div className="bg-card border rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-red-500">{totalAnomalies}</div>
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Anomalies</div>
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-red-500 truncate">{totalAnomalies}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Anomalies</div>
             </div>
-            <div className="bg-card border rounded-lg p-3 text-center">
-              <div className="text-xl font-bold text-blue-500">{totalConsistency}</div>
-              <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Consistency</div>
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-lg sm:text-xl font-bold text-blue-500 truncate">{totalConsistency}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Consistency</div>
             </div>
           </div>
         </div>
@@ -208,16 +208,16 @@ export function QualityDashboard() {
           </div>
           <div className="space-y-1">
             {displayedMeanings.map(m => (
-              <div key={m.column_name} className="flex items-center justify-between bg-card border rounded-lg px-3 py-2 hover:bg-muted/20 transition-colors">
-                <div className="flex items-center gap-2 min-w-0">
+              <div key={m.column_name} className="flex items-center justify-between bg-card border rounded-lg px-3 py-2 hover:bg-muted/20 transition-colors overflow-hidden">
+                <div className="flex items-center gap-2 min-w-0 max-w-[60%]">
                   <span className="text-xs font-medium text-foreground truncate">{m.column_name}</span>
-                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded capitalize">{m.inferred_meaning.replace(/_/g, ' ')}</span>
+                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded capitalize truncate">{m.inferred_meaning.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {m.is_primary_key && <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">PK</span>}
                   {m.is_foreign_key && <span className="text-[9px] font-bold text-blue-500 bg-blue-500/10 px-1.5 py-0.5 rounded">FK</span>}
                   <div className="flex items-center gap-1">
-                    <div className="w-12 h-1.5 bg-muted/50 rounded-full overflow-hidden">
+                    <div className="w-12 sm:w-16 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                       <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round(m.confidence * 100)}%` }} />
                     </div>
                     <span className="text-[10px] text-muted-foreground w-8 text-right">{Math.round(m.confidence * 100)}%</span>
@@ -243,20 +243,20 @@ export function QualityDashboard() {
           <Database className="w-3.5 h-3.5 text-emerald-500" />
           Dataset Overview
         </h3>
-        <div className="grid grid-cols-3 gap-2">
-          <div className="bg-card border rounded-lg p-3 text-center">
-            <div className="text-lg font-bold text-foreground">{quality.row_count}</div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Rows</div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-base sm:text-lg font-bold text-foreground truncate">{quality.row_count}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Rows</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-base sm:text-lg font-bold text-foreground truncate">{quality.column_count}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Columns</div>
+            </div>
+            <div className="bg-card border rounded-lg p-3 text-center min-w-0">
+              <div className="text-base sm:text-lg font-bold text-foreground truncate">{quality.dimensions.length}</div>
+              <div className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Dimensions</div>
+            </div>
           </div>
-          <div className="bg-card border rounded-lg p-3 text-center">
-            <div className="text-lg font-bold text-foreground">{quality.column_count}</div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Columns</div>
-          </div>
-          <div className="bg-card border rounded-lg p-3 text-center">
-            <div className="text-lg font-bold text-foreground">{quality.dimensions.length}</div>
-            <div className="text-[9px] text-muted-foreground uppercase tracking-wider mt-0.5">Dimensions</div>
-          </div>
-        </div>
       </div>
     </div>
   );

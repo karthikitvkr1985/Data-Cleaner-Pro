@@ -208,7 +208,8 @@ export function DataGrid() {
         <div
           style={{
             height: `${rowVirtualizer.getTotalSize()}px`,
-            width: '100%',
+            minWidth: '100%',
+            width: 'max-content',
             position: 'relative',
           }}
         >
@@ -219,17 +220,17 @@ export function DataGrid() {
             </div>
             {table.getFlatHeaders().map(header => (
               <div
-                key={header.id}
-                onClick={() => handleHeaderClick(header.column.id)}
-                className={[
-                  'flex items-center px-2 py-2 font-medium text-xs border-r border-border/40 bg-muted/50',
-                  'cursor-pointer hover:bg-muted/80 transition-colors select-none truncate',
-                  selectedColumn === header.column.id
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'text-muted-foreground',
-                ].join(' ')}
-                style={{ flex: '1 1 0%', minWidth: 120, maxWidth: 400 }}
-              >
+                  key={header.id}
+                  onClick={() => handleHeaderClick(header.column.id)}
+                  className={[
+                    'flex items-center px-2 py-2 font-medium text-xs border-r border-border/40 bg-muted/50',
+                    'cursor-pointer hover:bg-muted/80 transition-colors select-none truncate',
+                    selectedColumn === header.column.id
+                      ? 'bg-primary/10 text-primary border-primary/30'
+                      : 'text-muted-foreground',
+                  ].join(' ')}
+                  style={{ flex: '1 1 0%', minWidth: 100, maxWidth: 300 }}
+                >
                 {flexRender(header.column.columnDef.header, header.getContext())}
               </div>
             ))}
@@ -269,7 +270,7 @@ export function DataGrid() {
                   <div
                     key={cell.id}
                     className="border-r border-border/30 flex items-center overflow-hidden"
-                    style={{ flex: '1 1 0%', minWidth: 120, maxWidth: 400 }}
+                    style={{ flex: '1 1 0%', minWidth: 100, maxWidth: 300 }}
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </div>

@@ -193,13 +193,13 @@ export function AuditLogViewer() {
                       <span className="text-xs font-medium text-foreground capitalize">{entry.action_type.replace(/_/g, ' ')}</span>
                       <span className="text-[10px] text-muted-foreground/50 font-mono ml-auto">{time}</span>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed ml-7">{entry.description}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed ml-7 break-words">{entry.description}</p>
                     {entry.details && Object.keys(entry.details).length > 0 && (
                       <details className="ml-7 mt-1">
                         <summary className="text-[10px] text-muted-foreground/50 cursor-pointer hover:text-muted-foreground transition-colors">
                           View details
                         </summary>
-                        <pre className="mt-1 text-[9px] text-muted-foreground/50 bg-muted/20 rounded p-2 overflow-x-auto max-h-32 leading-relaxed">
+                        <pre className="mt-1 text-[9px] text-muted-foreground/50 bg-muted/20 rounded p-2 overflow-x-auto max-h-32 leading-relaxed whitespace-pre-wrap break-all">
                           {JSON.stringify(entry.details, null, 2)}
                         </pre>
                       </details>

@@ -80,7 +80,7 @@ export async function applyRecipeToNewFile(sessionId: string, file: File) {
 }
 
 export async function exportRecipe(sessionId: string) {
-  const response = await fetch(`${API_BASE}/sessions/${sessionId}/recipe/export`, {
+  const response = await fetch(`${API_BASE}/sessions/${sessionId}/recipe`, {
     method: 'GET',
   });
   

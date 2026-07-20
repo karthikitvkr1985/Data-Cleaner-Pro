@@ -165,8 +165,8 @@ export function QualityRules() {
                         </span>
                       </div>
 
-                      {/* Plain-English description */}
-                      <p className="text-xs text-foreground leading-snug">{plainText}</p>
+                  {/* Plain-English description */}
+                  <p className="text-xs text-foreground leading-snug break-words">{plainText}</p>
 
                       {/* Status line */}
                       <p className="text-[10px] text-muted-foreground">

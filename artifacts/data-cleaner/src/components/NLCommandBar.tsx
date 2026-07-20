@@ -161,10 +161,10 @@ export function NLCommandBar() {
                       const key = Object.keys(before ?? {})[0] ?? '';
                       return (
                         <div key={i} className="grid grid-cols-2 border-b last:border-b-0">
-                          <div className="p-2 border-r text-red-400/80 truncate bg-red-500/5">
+                          <div className="p-2 border-r text-red-400/80 truncate bg-red-500/5 break-words">
                             {JSON.stringify(before[key] ?? before).replace(/^"|"$/g, '') || '(empty)'}
                           </div>
-                          <div className="p-2 text-emerald-400 truncate bg-emerald-500/5">
+                          <div className="p-2 text-emerald-400 truncate bg-emerald-500/5 break-words">
                             {JSON.stringify((after ?? {})[key] ?? after).replace(/^"|"$/g, '') || '(empty)'}
                           </div>
                         </div>

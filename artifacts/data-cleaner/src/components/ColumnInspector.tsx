@@ -172,7 +172,7 @@ export function ColumnInspector() {
 
           {/* ── At-a-glance stats ── */}
           <Section title="At a Glance">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <Tile label="Total rows" value={totalCount.toLocaleString()} />
               <Tile
                 label="Data filled"
@@ -254,10 +254,10 @@ export function ColumnInspector() {
                     }`}
                   >
                     <p className="text-muted-foreground mb-2 leading-relaxed">{s.reason}</p>
-                    <div className="flex items-center gap-2 font-mono text-[11px] bg-muted rounded px-2 py-1.5 mb-2">
-                      <span className="text-red-400 line-through truncate max-w-[38%]">{s.original_value ?? 'empty'}</span>
+                    <div className="flex items-center gap-2 font-mono text-[11px] bg-muted rounded px-2 py-1.5 mb-2 overflow-hidden">
+                      <span className="text-red-400 line-through truncate min-w-0 max-w-[35%]">{s.original_value ?? 'empty'}</span>
                       <span className="text-muted-foreground shrink-0">→</span>
-                      <span className="text-emerald-400 font-semibold truncate max-w-[48%]">{s.proposed_value ?? 'remove'}</span>
+                      <span className="text-emerald-400 font-semibold truncate min-w-0 max-w-[35%]">{s.proposed_value ?? 'remove'}</span>
                       {s.row_index != null && <span className="ml-auto text-[9px] text-muted-foreground/50 shrink-0">row {s.row_index}</span>}
                     </div>
                     {s.status === 'pending' ? (
@@ -410,8 +410,8 @@ export function ColumnInspector() {
                       const av    = String(after?.[col] ?? after ?? '');
                       return (
                         <div key={i} className="grid grid-cols-2 border-b last:border-b-0">
-                          <div className="p-2 border-r text-red-400/80 truncate bg-red-500/5">{bv || '(empty)'}</div>
-                          <div className="p-2 text-emerald-400 truncate bg-emerald-500/5">{av || '(empty)'}</div>
+                          <div className="p-2 border-r text-red-400/80 truncate bg-red-500/5 break-words">{bv || '(empty)'}</div>
+                          <div className="p-2 text-emerald-400 truncate bg-emerald-500/5 break-words">{av || '(empty)'}</div>
                         </div>
                       );
                     })}
@@ -455,12 +455,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Tile({ label, value, note, accent }: { label: string; value: string; note?: string; accent?: 'ok' | 'warn' }) {
   return (
-    <div className="bg-muted rounded-lg p-2.5 border border-border/50 flex-1">
-      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5">{label}</div>
-      <div className={`text-sm font-semibold ${accent === 'ok' ? 'text-emerald-400' : accent === 'warn' ? 'text-yellow-400' : 'text-foreground'}`}>
+    <div className="bg-muted rounded-lg p-2.5 border border-border/50 flex-1 min-w-0">
+      <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-0.5 truncate">{label}</div>
+      <div className={`text-sm font-semibold truncate ${accent === 'ok' ? 'text-emerald-400' : accent === 'warn' ? 'text-yellow-400' : 'text-foreground'}`}>
         {value}
       </div>
-      {note && <div className="text-[10px] text-muted-foreground mt-0.5">{note}</div>}
+      {note && <div className="text-[10px] text-muted-foreground mt-0.5 truncate">{note}</div>}
     </div>
   );
 }
