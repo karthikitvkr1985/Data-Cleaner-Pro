@@ -16,7 +16,6 @@ import {
   useUpdateSuggestion,
   useBulkUpdateSuggestions,
   getGetSuggestionsQueryKey,
-  getGetPreviewQueryKey,
 } from '@workspace/api-client-react';
 import type { Suggestion, BulkApplyResult } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -52,9 +51,8 @@ export function ReviewQueue() {
     { query: { enabled: !!sessionId } },
   );
 
-  const invalidate = () => {
+  const refetch = () => {
     queryClient.invalidateQueries({ queryKey: getGetSuggestionsQueryKey(sessionId!) });
-    queryClient.invalidateQueries({ queryKey: getGetPreviewQueryKey(sessionId!) });
   };
 
   const onError = (err: any) => {
@@ -66,13 +64,13 @@ export function ReviewQueue() {
   };
 
   const updateMutation = useUpdateSuggestion({
-    mutation: { onSuccess: invalidate, onError },
+    mutation: { onSuccess: () => { refetch(); bumpDataGeneration(); }, onError },
   } as any);
 
   const bulkMutation = useBulkUpdateSuggestions({
     mutation: {
       onSuccess: (res: BulkApplyResult, vars: any) => {
-        invalidate();
+        refetch();
         bumpDataGeneration();
         const action = vars.data.status === 'accepted' ? 'applied' : 'skipped';
         // Switch filter so user SEES the items that were just processed — not an empty list
