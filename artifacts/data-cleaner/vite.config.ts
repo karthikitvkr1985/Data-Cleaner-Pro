@@ -72,16 +72,22 @@ export default defineConfig({
     fs: {
       strict: true,
     },
-    proxy: process.env.NODE_ENV !== 'production' ? {
+    proxy: {
       '/api': {
         target: process.env.API_URL || 'http://localhost:8000',
         changeOrigin: true,
       },
-    } : undefined,
+    },
   },
   preview: {
     port,
     host: '0.0.0.0',
     allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: process.env.API_URL || 'http://localhost:8000',
+        changeOrigin: true,
+      },
+    },
   },
 });
