@@ -6,11 +6,9 @@ import {
   flexRender,
   type ColumnDef,
 } from '@tanstack/react-table';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetPreview,
   useGetSuggestions,
-  getGetPreviewQueryKey,
 } from '@workspace/api-client-react';
 import type { Suggestion } from '@workspace/api-client-react';
 import { useSessionStore } from '../store/sessionStore';
@@ -22,7 +20,6 @@ const PAGE_SIZE = 100;
 
 export function DataGrid() {
   const { sessionId, selectedColumn, setSelectedColumn, setActivePanel, dataGeneration } = useSessionStore();
-  const queryClient = useQueryClient();
   const [showOriginal, setShowOriginal] = useState(false);
   const [page, setPage] = useState(0);
 
@@ -32,12 +29,10 @@ export function DataGrid() {
   const [totalRows, setTotalRows] = useState(0);
   const [columns, setColumns] = useState<string[]>([]);
 
-  // ── CORRECT hook call: useGetPreview(sessionId, params?, reactQueryOptions?) ──
-  // Bug was: mixing react-query options (enabled, queryKey) into the params object,
-  // which serialised the whole object as query=[object Object] in the URL.
+  const previewParams = { page, page_size: PAGE_SIZE, show_original: showOriginal, _t: dataGeneration } as const;
   const { data: previewData, isLoading, isFetching } = useGetPreview(
     sessionId!,
-    { page, page_size: PAGE_SIZE, show_original: showOriginal },
+    previewParams,
     { query: { enabled: !!sessionId } },
   );
 
@@ -58,15 +53,11 @@ export function DataGrid() {
     return map;
   }, [suggestionsData]);
 
-  // Reset to page 0 and refetch when dataGeneration changes (bumped after
-  // mutations). Keep old rows visible while fetching so the table doesn't
-  // flash empty.
   useEffect(() => {
     if (!sessionId) return;
     rowCache.current = new Map();
     setPage(0);
-    queryClient.refetchQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
-  }, [showOriginal, sessionId, dataGeneration, queryClient]);
+  }, [showOriginal, sessionId, dataGeneration]);
 
   useEffect(() => {
     if (!previewData?.rows) return;
