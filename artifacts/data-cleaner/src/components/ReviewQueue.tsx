@@ -38,7 +38,7 @@ const CATEGORY_INFO: Record<string, { label: string; plain: string; color: strin
 };
 
 export function ReviewQueue() {
-  const { sessionId } = useSessionStore();
+  const { sessionId, bumpDataGeneration } = useSessionStore();
   const queryClient   = useQueryClient();
   const { toast }     = useToast();
 
@@ -57,14 +57,23 @@ export function ReviewQueue() {
     queryClient.invalidateQueries({ queryKey: getGetPreviewQueryKey(sessionId!) });
   };
 
+  const onError = (err: any) => {
+    toast({
+      title: 'Something went wrong',
+      description: err?.message ?? 'Could not reach the server. Please try again.',
+      variant: 'destructive',
+    });
+  };
+
   const updateMutation = useUpdateSuggestion({
-    mutation: { onSuccess: invalidate },
+    mutation: { onSuccess: invalidate, onError },
   } as any);
 
   const bulkMutation = useBulkUpdateSuggestions({
     mutation: {
       onSuccess: (res: BulkApplyResult, vars: any) => {
         invalidate();
+        bumpDataGeneration();
         const action = vars.data.status === 'accepted' ? 'applied' : 'skipped';
         // Switch filter so user SEES the items that were just processed — not an empty list
         setStatusFilter(vars.data.status === 'accepted' ? 'applied' : 'skipped');
@@ -75,6 +84,7 @@ export function ReviewQueue() {
           description: `Switch to "Pending" tab to see what's still waiting.`,
         });
       },
+      onError,
     },
   } as any);
 

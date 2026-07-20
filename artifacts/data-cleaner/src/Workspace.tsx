@@ -260,7 +260,7 @@ export function Workspace() {
         {/* ── Right / full panel ── */}
         {activePanel !== 'grid' && (
           <aside className={`
-            ${activePanel === 'health' ? 'w-full' : 'w-full lg:w-[400px] xl:w-[440px]'}
+            ${activePanel === 'health' ? 'w-full' : 'w-full lg:w-[440px] xl:w-[520px] 2xl:w-[600px]'}
             bg-card shadow-xl z-10 overflow-hidden flex flex-col shrink-0
           `}>
             {activePanel === 'review'     && <ReviewQueue />}

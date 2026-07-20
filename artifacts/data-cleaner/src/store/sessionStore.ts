@@ -10,6 +10,7 @@ interface SessionState {
   selectedColumn: string | null;
   activePanel: 'grid' | 'review' | 'inspector' | 'recipe' | 'issues' | 'validation' | 'health';
   undoStack: string[];
+  dataGeneration: number;
   setSession: (sessionId: string, filename: string, sheets: string[]) => void;
   setColumns: (columns: ColumnProfile[]) => void;
   setSelectedColumn: (col: string | null) => void;
@@ -17,6 +18,7 @@ interface SessionState {
   setSelectedSheet: (sheet: string | null) => void;
   pushUndo: (stepId: string) => void;
   clearSession: () => void;
+  bumpDataGeneration: () => void;
 }
 
 export const useSessionStore = create<SessionState>((set) => ({
@@ -28,6 +30,7 @@ export const useSessionStore = create<SessionState>((set) => ({
   selectedColumn: null,
   activePanel: 'grid',
   undoStack: [],
+  dataGeneration: 0,
   setSession: (sessionId, filename, sheets) => set({ sessionId, filename, sheets, selectedSheet: sheets[0] || null }),
   setColumns: (columns) => set({ columns }),
   setSelectedColumn: (col) => set({ selectedColumn: col }),
@@ -42,6 +45,8 @@ export const useSessionStore = create<SessionState>((set) => ({
     columns: [],
     selectedColumn: null,
     activePanel: 'grid',
-    undoStack: []
+    undoStack: [],
+    dataGeneration: 0,
   }),
+  bumpDataGeneration: () => set((state) => ({ dataGeneration: state.dataGeneration + 1 })),
 }));
