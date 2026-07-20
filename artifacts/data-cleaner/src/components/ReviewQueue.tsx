@@ -52,9 +52,9 @@ export function ReviewQueue() {
     { query: { enabled: !!sessionId } },
   );
 
-  const invalidate = () => {
+  const refreshData = () => {
     queryClient.invalidateQueries({ queryKey: getGetSuggestionsQueryKey(sessionId!) });
-    queryClient.invalidateQueries({ queryKey: getGetPreviewQueryKey(sessionId!) });
+    queryClient.refetchQueries({ queryKey: getGetPreviewQueryKey(sessionId!) });
   };
 
   const onError = (err: any) => {
@@ -66,13 +66,13 @@ export function ReviewQueue() {
   };
 
   const updateMutation = useUpdateSuggestion({
-    mutation: { onSuccess: () => { invalidate(); bumpDataGeneration(); }, onError },
+    mutation: { onSuccess: () => { refreshData(); bumpDataGeneration(); }, onError },
   } as any);
 
   const bulkMutation = useBulkUpdateSuggestions({
     mutation: {
       onSuccess: (res: BulkApplyResult, vars: any) => {
-        invalidate();
+        refreshData();
         bumpDataGeneration();
         const action = vars.data.status === 'accepted' ? 'applied' : 'skipped';
         // Switch filter so user SEES the items that were just processed — not an empty list
