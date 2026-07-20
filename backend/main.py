@@ -74,11 +74,16 @@ class SessionStore:
             "df": None,
             "df_original": None,
             "columns": [],
-            "suggestions": {},  # id -> Suggestion
+            "suggestions": {},
             "recipe_steps": [],
-            "nl_previews": {},  # preview_id -> NLCommandPreview
-            "validation_rules": {},  # rule_id -> ValidationRule
+            "nl_previews": {},
+            "validation_rules": {},
             "table_detection": None,
+            "outliers": [],
+            "anomalies": [],
+            "consistency_issues": [],
+            "quality_score": None,
+            "schema_meanings": [],
             "created_at": datetime.utcnow().isoformat(),
         }
         self.set(session_id, data)

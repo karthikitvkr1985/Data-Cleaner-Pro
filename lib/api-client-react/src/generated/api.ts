@@ -21,9 +21,14 @@ import type {
 
 import type {
   AnalysisResult,
+  AnomalyResult,
   ApplyResult,
+  AuditEntry,
   BulkApplyResult,
   BulkSuggestionInput,
+  CleaningReport,
+  ConsistencyIssue,
+  DataQualityScore,
   DeleteResult,
   ExportSessionParams,
   FileUploadInput,
@@ -35,10 +40,12 @@ import type {
   NLCommandInput,
   NLCommandPreview,
   NLConfirmResult,
+  OutlierResult,
   PagedPreview,
   RecipeApplyResult,
   RecipeExport,
   RecipeFileInput,
+  SchemaMeaning,
   SessionInfo,
   StructureDetectInput,
   SuggestionList,
@@ -1453,4 +1460,248 @@ export const useUpdateValidationRule = <TError = ErrorType<void>,
       > => {
       return useMutation(getUpdateValidationRuleMutationOptions(options));
     }
+
+
+// ── Quality Score ───────────────────────────────────────────────────
+
+export const getGetQualityScoreUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/quality-score`;
+}
+
+export const getQualityScore = async (sessionId: string, options?: RequestInit): Promise<DataQualityScore> => {
+  return customFetch<DataQualityScore>(getGetQualityScoreUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetQualityScoreQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/quality-score`] as const;
+}
+
+export const getGetQualityScoreQueryOptions = <TData = Awaited<ReturnType<typeof getQualityScore>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetQualityScoreQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getQualityScore>>> = ({ signal }) => getQualityScore(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetQualityScoreQueryResult = NonNullable<Awaited<ReturnType<typeof getQualityScore>>>
+export type GetQualityScoreQueryError = ErrorType<void>
+
+export function useGetQualityScore<TData = Awaited<ReturnType<typeof getQualityScore>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetQualityScoreQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Outliers ────────────────────────────────────────────────────────
+
+export const getGetOutliersUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/outliers`;
+}
+
+export const getOutliers = async (sessionId: string, options?: RequestInit): Promise<OutlierResult[]> => {
+  return customFetch<OutlierResult[]>(getGetOutliersUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetOutliersQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/outliers`] as const;
+}
+
+export const getGetOutliersQueryOptions = <TData = Awaited<ReturnType<typeof getOutliers>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetOutliersQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getOutliers>>> = ({ signal }) => getOutliers(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOutliersQueryResult = NonNullable<Awaited<ReturnType<typeof getOutliers>>>
+export type GetOutliersQueryError = ErrorType<void>
+
+export function useGetOutliers<TData = Awaited<ReturnType<typeof getOutliers>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetOutliersQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Anomalies ───────────────────────────────────────────────────────
+
+export const getGetAnomaliesUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/anomalies`;
+}
+
+export const getAnomalies = async (sessionId: string, options?: RequestInit): Promise<AnomalyResult[]> => {
+  return customFetch<AnomalyResult[]>(getGetAnomaliesUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetAnomaliesQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/anomalies`] as const;
+}
+
+export const getGetAnomaliesQueryOptions = <TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetAnomaliesQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnomalies>>> = ({ signal }) => getAnomalies(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export function useGetAnomalies<TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAnomaliesQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Consistency Issues ──────────────────────────────────────────────
+
+export const getGetConsistencyIssuesUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/consistency-issues`;
+}
+
+export const getConsistencyIssues = async (sessionId: string, options?: RequestInit): Promise<ConsistencyIssue[]> => {
+  return customFetch<ConsistencyIssue[]>(getGetConsistencyIssuesUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetConsistencyIssuesQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/consistency-issues`] as const;
+}
+
+export const getGetConsistencyIssuesQueryOptions = <TData = Awaited<ReturnType<typeof getConsistencyIssues>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetConsistencyIssuesQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConsistencyIssues>>> = ({ signal }) => getConsistencyIssues(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export function useGetConsistencyIssues<TData = Awaited<ReturnType<typeof getConsistencyIssues>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetConsistencyIssuesQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Schema Meanings ─────────────────────────────────────────────────
+
+export const getGetSchemaMeaningsUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/schema-meanings`;
+}
+
+export const getSchemaMeanings = async (sessionId: string, options?: RequestInit): Promise<SchemaMeaning[]> => {
+  return customFetch<SchemaMeaning[]>(getGetSchemaMeaningsUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetSchemaMeaningsQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/schema-meanings`] as const;
+}
+
+export const getGetSchemaMeaningsQueryOptions = <TData = Awaited<ReturnType<typeof getSchemaMeanings>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetSchemaMeaningsQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSchemaMeanings>>> = ({ signal }) => getSchemaMeanings(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export function useGetSchemaMeanings<TData = Awaited<ReturnType<typeof getSchemaMeanings>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetSchemaMeaningsQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Audit Log ───────────────────────────────────────────────────────
+
+export const getGetAuditLogUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/audit-log`;
+}
+
+export const getAuditLog = async (sessionId: string, options?: RequestInit): Promise<AuditEntry[]> => {
+  return customFetch<AuditEntry[]>(getGetAuditLogUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetAuditLogQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/audit-log`] as const;
+}
+
+export const getGetAuditLogQueryOptions = <TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetAuditLogQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditLog>>> = ({ signal }) => getAuditLog(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAuditLogQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditLog>>>
+export type GetAuditLogQueryError = ErrorType<void>
+
+export function useGetAuditLog<TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAuditLogQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+// ── Cleaning Report ─────────────────────────────────────────────────
+
+export const getGetCleaningReportUrl = (sessionId: string) => {
+  return `/api/sessions/${sessionId}/cleaning-report`;
+}
+
+export const getCleaningReport = async (sessionId: string, options?: RequestInit): Promise<CleaningReport> => {
+  return customFetch<CleaningReport>(getGetCleaningReportUrl(sessionId), {
+    ...options, method: 'GET'
+  });
+}
+
+export const getGetCleaningReportQueryKey = (sessionId: string) => {
+  return [`/api/sessions/${sessionId}/cleaning-report`] as const;
+}
+
+export const getGetCleaningReportQueryOptions = <TData = Awaited<ReturnType<typeof getCleaningReport>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+  const queryKey = queryOptions?.queryKey ?? getGetCleaningReportQueryKey(sessionId);
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCleaningReport>>> = ({ signal }) => getCleaningReport(sessionId, { signal, ...requestOptions });
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetCleaningReportQueryResult = NonNullable<Awaited<ReturnType<typeof getCleaningReport>>>
+export type GetCleaningReportQueryError = ErrorType<void>
+
+export function useGetCleaningReport<TData = Awaited<ReturnType<typeof getCleaningReport>>, TError = ErrorType<void>>(
+  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetCleaningReportQueryOptions(sessionId, options);
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
+  return withQueryKey(query, queryOptions.queryKey);
+}
 

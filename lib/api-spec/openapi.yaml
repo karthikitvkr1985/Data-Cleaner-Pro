@@ -290,6 +290,121 @@ paths:
         "404":
           description: Session not found
 
+  /sessions/{session_id}/outliers:
+    get:
+      operationId: getOutliers
+      tags: [sessions]
+      summary: Detect statistical outliers in numeric columns
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Outlier detection results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OutlierResult"
+
+  /sessions/{session_id}/anomalies:
+    get:
+      operationId: getAnomalies
+      tags: [sessions]
+      summary: Detect categorical and cross-column anomalies
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Anomaly detection results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AnomalyResult"
+
+  /sessions/{session_id}/consistency-issues:
+    get:
+      operationId: getConsistencyIssues
+      tags: [sessions]
+      summary: Detect consistency issues across columns
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Consistency issue results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConsistencyIssue"
+
+  /sessions/{session_id}/quality-score:
+    get:
+      operationId: getQualityScore
+      tags: [sessions]
+      summary: Compute data quality scores
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Data quality score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataQualityScore"
+
+  /sessions/{session_id}/schema-meanings:
+    get:
+      operationId: getSchemaMeanings
+      tags: [sessions]
+      summary: Infer semantic meaning of each column
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Schema meaning results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SchemaMeaning"
+
+  /sessions/{session_id}/audit-log:
+    get:
+      operationId: getAuditLog
+      tags: [sessions]
+      summary: Build complete audit log of all cleaning actions
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditEntry"
+
+  /sessions/{session_id}/cleaning-report:
+    get:
+      operationId: getCleaningReport
+      tags: [sessions]
+      summary: Generate comprehensive cleaning report
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Cleaning report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CleaningReport"
+
   /sessions/{session_id}/recipe:
     get:
       operationId: getRecipe
@@ -839,3 +954,189 @@ components:
       properties:
         deleted:
           type: boolean
+
+    SchemaMeaning:
+      type: object
+      required: [column_name, inferred_meaning, confidence]
+      properties:
+        column_name:
+          type: string
+        inferred_meaning:
+          type: string
+        confidence:
+          type: number
+          format: float
+        is_primary_key:
+          type: boolean
+        is_foreign_key:
+          type: boolean
+        matching_keywords:
+          type: array
+          items:
+            type: string
+
+    OutlierResult:
+      type: object
+      required: [column_name, outlier_count, total_values, outlier_percentage, method]
+      properties:
+        column_name:
+          type: string
+        outlier_count:
+          type: integer
+        total_values:
+          type: integer
+        outlier_percentage:
+          type: number
+          format: float
+        method:
+          type: string
+        outliers:
+          type: array
+          items:
+            type: object
+        iqr_bounds:
+          type: object
+          nullable: true
+
+    AnomalyResult:
+      type: object
+      required: [column_name, anomaly_type, count]
+      properties:
+        column_name:
+          type: string
+        anomaly_type:
+          type: string
+        count:
+          type: integer
+        anomalies:
+          type: array
+          items:
+            type: object
+
+    ConsistencyIssue:
+      type: object
+      required: [column_name, issue_type, description, row_count, severity]
+      properties:
+        column_name:
+          type: string
+        issue_type:
+          type: string
+        description:
+          type: string
+        row_count:
+          type: integer
+        severity:
+          type: string
+        affected_values:
+          type: array
+          items:
+            type: string
+        suggestion:
+          type: string
+
+    QualityDimension:
+      type: object
+      required: [name, description]
+      properties:
+        name:
+          type: string
+        score:
+          type: number
+          format: float
+          nullable: true
+        description:
+          type: string
+        passed:
+          type: integer
+        total:
+          type: integer
+
+    DataQualityScore:
+      type: object
+      required: [overall_score]
+      properties:
+        overall_score:
+          type: number
+          format: float
+        dimensions:
+          type: array
+          items:
+            $ref: "#/components/schemas/QualityDimension"
+        row_count:
+          type: integer
+        column_count:
+          type: integer
+        before_after_improvement:
+          type: number
+          format: float
+          nullable: true
+
+    AuditEntry:
+      type: object
+      required: [entry_id, timestamp, action_type, module, description]
+      properties:
+        entry_id:
+          type: string
+        timestamp:
+          type: string
+        action_type:
+          type: string
+        module:
+          type: string
+        description:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+        confidence:
+          type: number
+          format: float
+
+    ReportSection:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        content:
+          type: object
+          additionalProperties: true
+
+    WorkflowSummary:
+      type: object
+      properties:
+        total_suggestions:
+          type: integer
+        applied_count:
+          type: integer
+        rejected_count:
+          type: integer
+        pending_count:
+          type: integer
+        total_operations:
+          type: integer
+        outlier_count:
+          type: integer
+        anomaly_count:
+          type: integer
+        consistency_issue_count:
+          type: integer
+        data_quality_score:
+          type: number
+          format: float
+
+    CleaningReport:
+      type: object
+      required: [session_id, generated_at]
+      properties:
+        session_id:
+          type: string
+        generated_at:
+          type: string
+          format: date-time
+        sections:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReportSection"
+        workflow_summary:
+          $ref: "#/components/schemas/WorkflowSummary"
