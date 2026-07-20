@@ -9,6 +9,9 @@ from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 
 from backend.config import CORS_ALLOW_ALL, CORS_ORIGINS, SESSION_TTL_MINUTES
 from backend.routers import analyze, apply, export, upload
@@ -145,3 +148,37 @@ app.include_router(export.router)
 @app.get("/api/healthz")
 async def health_check():
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------------
+# Serve compiled frontend (production) — no Vite proxy needed
+# ---------------------------------------------------------------------------
+
+FRONTEND_DIST = (
+    Path(__file__).resolve().parent.parent
+    / "artifacts" / "data-cleaner" / "dist" / "public"
+)
+
+_index_html: str | None = None
+
+if FRONTEND_DIST.exists():
+    assets_dir = FRONTEND_DIST / "assets"
+    if assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_frontend(full_path: str):
+        global _index_html
+
+        if full_path.startswith("api"):
+            return JSONResponse({"detail": "Not Found"}, status_code=404)
+
+        file_path = FRONTEND_DIST / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+
+        if _index_html is None:
+            idx = FRONTEND_DIST / "index.html"
+            _index_html = idx.read_text(encoding="utf-8") if idx.exists() else ""
+
+        return HTMLResponse(_index_html) if _index_html else JSONResponse({"detail": "Not Found"}, status_code=404)
