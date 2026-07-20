@@ -71,10 +71,12 @@ export function DataGrid() {
   useEffect(() => {
     if (!previewData?.rows) return;
 
-    // Store this page in the cache
-    rowCache.current.set(previewData.page, previewData.rows);
+    const source = showOriginal && previewData.original_rows
+      ? previewData.original_rows
+      : previewData.rows;
 
-    // Rebuild allRows from the sorted cache so pages never duplicate
+    rowCache.current.set(previewData.page, source);
+
     const sorted = [...rowCache.current.entries()]
       .sort(([a], [b]) => a - b)
       .flatMap(([, rows]) => rows);
@@ -84,7 +86,7 @@ export function DataGrid() {
     if (columns.length === 0 && previewData.columns.length > 0) {
       setColumns(previewData.columns);
     }
-  }, [previewData]);
+  }, [previewData, showOriginal]);
 
   // ── TABLE DEFINITION ──
   const columnDefs = useMemo<ColumnDef<any>[]>(() => {
@@ -95,9 +97,8 @@ export function DataGrid() {
       header: colName,
       cell: (info: any) => {
         const val = info.getValue() as string | number | null;
-        // Map from absolute row index (position in allRows) to suggestion status
         const key = `${colName}:${info.row.index}`;
-        const status = suggestionMap.get(key);
+        const status = showOriginal ? undefined : suggestionMap.get(key);
         return (
           <div
             className={[
@@ -116,7 +117,7 @@ export function DataGrid() {
       minSize: 120,
       size: 200,
     }));
-  }, [columns, previewData?.columns, suggestionMap]);
+  }, [columns, previewData?.columns, suggestionMap, showOriginal]);
 
   const table = useReactTable({
     data: allRows,
