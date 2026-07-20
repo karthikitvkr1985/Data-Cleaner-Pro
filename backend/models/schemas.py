@@ -12,6 +12,111 @@ class ColumnProfile(BaseModel):
     total_count: int = 0
     sample_values: list[str]
     stats: dict[str, Any] = Field(default_factory=dict)
+    duplicate_pct: float | None = None
+    distinct_value_count: int | None = None
+    min_value: str | None = None
+    max_value: str | None = None
+    average: float | None = None
+    median: float | None = None
+    frequency_distribution: dict[str, int] | None = None
+    dominant_pattern: str | None = None
+    possible_primary_key: bool = False
+    possible_foreign_key: bool = False
+
+
+class SchemaMeaning(BaseModel):
+    column_name: str
+    inferred_meaning: str
+    confidence: float
+    is_primary_key: bool = False
+    is_foreign_key: bool = False
+    matching_keywords: list[str] = Field(default_factory=list)
+
+
+class OutlierResult(BaseModel):
+    column_name: str
+    outlier_count: int
+    total_values: int
+    outlier_percentage: float
+    method: str
+    outliers: list[dict[str, Any]] = Field(default_factory=list)
+    iqr_bounds: dict[str, float] | None = None
+
+
+class AnomalyEntry(BaseModel):
+    value: str
+    row_indices: list[int]
+    frequency: int
+    frequency_pct: float
+    reason: str
+    confidence: float
+
+
+class AnomalyResult(BaseModel):
+    column_name: str
+    anomaly_type: Literal["categorical", "numeric", "cross_column"]
+    count: int
+    anomalies: list[dict[str, Any]] = Field(default_factory=list)
+
+
+class ConsistencyIssue(BaseModel):
+    column_name: str
+    issue_type: str
+    description: str
+    row_count: int
+    severity: Literal["low", "medium", "high"]
+    affected_values: list[str] = Field(default_factory=list)
+    suggestion: str = ""
+
+
+class QualityDimension(BaseModel):
+    name: str
+    score: float | None
+    description: str
+    passed: int = 0
+    total: int = 0
+
+
+class DataQualityScore(BaseModel):
+    overall_score: float
+    dimensions: list[QualityDimension] = Field(default_factory=list)
+    row_count: int = 0
+    column_count: int = 0
+    before_after_improvement: float | None = None
+
+
+class AuditEntry(BaseModel):
+    entry_id: str
+    timestamp: str
+    action_type: str
+    module: str
+    description: str
+    details: dict[str, Any] = Field(default_factory=dict)
+    confidence: float = 1.0
+
+
+class ReportSection(BaseModel):
+    title: str
+    content: dict[str, Any] = Field(default_factory=dict)
+
+
+class WorkflowSummary(BaseModel):
+    total_suggestions: int = 0
+    applied_count: int = 0
+    rejected_count: int = 0
+    pending_count: int = 0
+    total_operations: int = 0
+    outlier_count: int = 0
+    anomaly_count: int = 0
+    consistency_issue_count: int = 0
+    data_quality_score: float = 0.0
+
+
+class CleaningReport(BaseModel):
+    session_id: str
+    generated_at: datetime
+    sections: list[ReportSection] = Field(default_factory=list)
+    workflow_summary: WorkflowSummary = Field(default_factory=WorkflowSummary)
 
 
 class Suggestion(BaseModel):

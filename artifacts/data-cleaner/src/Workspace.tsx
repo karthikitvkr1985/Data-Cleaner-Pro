@@ -3,25 +3,28 @@ import { useSessionStore } from './store/sessionStore';
 import {
   Database, Download, LayoutGrid, ListChecks, MousePointerClick,
   History, AlertOctagon, ShieldCheck, Zap, Menu, X, Upload,
-  FileSpreadsheet,
+  FileSpreadsheet, TrendingUp, ClipboardList, FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { exportSession } from './api/client';
 import { useToast } from '@/hooks/use-toast';
-import { DataGrid }        from './components/DataGrid';
-import { ReviewQueue }     from './components/ReviewQueue';
-import { ColumnInspector } from './components/ColumnInspector';
-import { RecipePanel }     from './components/RecipePanel';
-import { IssuesReport }    from './components/IssuesReport';
-import { ValidationRules } from './components/ValidationRules';
-import { NLCommandBar }    from './components/NLCommandBar';
-import { UploadZone }      from './components/UploadZone';
-import { FeatureHealth }   from './components/FeatureHealth';
+import { DataGrid }             from './components/DataGrid';
+import { ReviewQueue }          from './components/ReviewQueue';
+import { ColumnInspector }      from './components/ColumnInspector';
+import { RecipePanel }          from './components/RecipePanel';
+import { IssuesReport }         from './components/IssuesReport';
+import { ValidationRules }      from './components/ValidationRules';
+import { NLCommandBar }         from './components/NLCommandBar';
+import { UploadZone }           from './components/UploadZone';
+import { FeatureHealth }        from './components/FeatureHealth';
+import { QualityDashboard }     from './components/QualityDashboard';
+import { AuditLogViewer }       from './components/AuditLogViewer';
+import { CleaningReportViewer } from './components/CleaningReportViewer';
 import { useGetSuggestions, useGetValidationRules } from '@workspace/api-client-react';
 import type { Suggestion, ValidationRule } from '@workspace/api-client-react';
 
 // ── Panel definitions ─────────────────────────────────────────────────────────
-type PanelId = 'grid' | 'review' | 'inspector' | 'recipe' | 'issues' | 'validation' | 'health';
+type PanelId = 'grid' | 'review' | 'inspector' | 'recipe' | 'issues' | 'validation' | 'health' | 'quality' | 'audit' | 'report';
 
 const PANELS: Array<{
   id: PanelId;
@@ -71,6 +74,27 @@ const PANELS: Array<{
     sublabel: 'Auto-generated guards',
     icon: ShieldCheck,
     group: 'main',
+  },
+  {
+    id: 'quality',
+    label: 'Quality Dashboard',
+    sublabel: 'DQ scores & schema meaning',
+    icon: TrendingUp,
+    group: 'insight',
+  },
+  {
+    id: 'audit',
+    label: 'Audit Log',
+    sublabel: 'Every action recorded',
+    icon: ClipboardList,
+    group: 'insight',
+  },
+  {
+    id: 'report',
+    label: 'Cleaning Report',
+    sublabel: 'Full analysis & summary',
+    icon: FileText,
+    group: 'insight',
   },
   {
     id: 'health',
@@ -268,6 +292,9 @@ export function Workspace() {
             {activePanel === 'recipe'     && <RecipePanel />}
             {activePanel === 'issues'     && <IssuesReport />}
             {activePanel === 'validation' && <ValidationRules />}
+            {activePanel === 'quality'    && <QualityDashboard />}
+            {activePanel === 'audit'      && <AuditLogViewer />}
+            {activePanel === 'report'     && <CleaningReportViewer />}
             {activePanel === 'health'     && <FeatureHealth />}
           </aside>
         )}

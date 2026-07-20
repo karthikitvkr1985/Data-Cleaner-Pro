@@ -6,6 +6,7 @@ import re
 from typing import Any
 
 import pandas as pd
+import numpy as np
 
 from backend.models.schemas import ColumnProfile
 
@@ -35,7 +36,6 @@ def load_dataframe(
         sep = "\t" if file_ext == ".tsv" else ","
         df = pd.read_csv(io.BytesIO(file_bytes), sep=sep, header=header_row)
     else:
-        # Excel — read as raw cells first if header_row is not 0
         engine = "openpyxl" if file_ext in (".xlsx",) else "xlrd"
         try:
             df = pd.read_excel(
@@ -47,7 +47,6 @@ def load_dataframe(
         except Exception:
             df = pd.read_excel(io.BytesIO(file_bytes), sheet_name=0, header=0)
 
-    # Strip leading/trailing whitespace from string columns
     df = df.apply(lambda col: col.str.strip() if col.dtype == object else col)
     df_original = df.copy()
     return df, df_original
@@ -73,7 +72,6 @@ def _try_float(series: pd.Series) -> bool:
 
 def _try_datetime(series: pd.Series) -> bool:
     sample = series.dropna().astype(str).head(50)
-    successes = 0
     for fmt in DATETIME_FORMATS:
         try:
             parsed = pd.to_datetime(sample, format=fmt, errors="coerce")
@@ -82,7 +80,6 @@ def _try_datetime(series: pd.Series) -> bool:
                 return True
         except Exception:
             pass
-    # Generic fallback
     try:
         parsed = pd.to_datetime(sample, errors="coerce", infer_datetime_format=True)
         return parsed.notna().sum() / max(len(sample), 1) > 0.8
@@ -109,6 +106,9 @@ def _numeric_stats(series: pd.Series) -> dict[str, Any]:
             "max": float(num.max()) if not num.isna().all() else None,
             "mean": round(float(num.mean()), 4) if not num.isna().all() else None,
             "median": float(num.median()) if not num.isna().all() else None,
+            "std": round(float(num.std()), 4) if not num.isna().all() else None,
+            "q1": float(num.quantile(0.25)) if not num.isna().all() else None,
+            "q3": float(num.quantile(0.75)) if not num.isna().all() else None,
         }
     except Exception:
         return {}
@@ -116,8 +116,11 @@ def _numeric_stats(series: pd.Series) -> dict[str, Any]:
 
 def _categorical_stats(series: pd.Series) -> dict[str, Any]:
     try:
-        counts = series.value_counts().head(10)
-        return {"top_values": {str(k): int(v) for k, v in counts.items()}}
+        counts = series.value_counts()
+        return {
+            "top_values": {str(k): int(v) for k, v in counts.head(10).items()},
+            "value_counts": {str(k): int(v) for k, v in counts.items()},
+        }
     except Exception:
         return {}
 
@@ -128,9 +131,29 @@ def _datetime_stats(series: pd.Series) -> dict[str, Any]:
         return {
             "min": str(parsed.min()) if not parsed.isna().all() else None,
             "max": str(parsed.max()) if not parsed.isna().all() else None,
+            "range_days": int((parsed.max() - parsed.min()).days) if not parsed.isna().all() else None,
         }
     except Exception:
         return {}
+
+
+def _dominant_pattern(series: pd.Series) -> str:
+    patterns = series.dropna().astype(str).apply(_pattern_of).value_counts()
+    if not patterns.empty:
+        return str(patterns.index[0])
+    return ""
+
+
+def _pattern_of(val: str) -> str:
+    result = []
+    for ch in str(val):
+        if ch.isdigit():
+            result.append("9")
+        elif ch.isalpha():
+            result.append("A" if ch.isupper() else "a")
+        else:
+            result.append(ch)
+    return "".join(result)
 
 
 def infer_column_profiles(df: pd.DataFrame) -> list[ColumnProfile]:
@@ -143,14 +166,12 @@ def infer_column_profiles(df: pd.DataFrame) -> list[ColumnProfile]:
         unique_count = int(series.nunique())
         sample = [str(v) for v in non_null.head(10).tolist()]
 
-        # Infer type
         inferred = "string"
         stats: dict[str, Any] = {}
 
         if non_null.empty:
             inferred = "string"
         elif series.dtype in (int, float, "int64", "float64", "int32", "float32"):
-            # Already numeric
             if series.dtype in ("int64", "int32") or (series.dtype in ("float64", "float32") and (series.dropna() % 1 == 0).all()):
                 inferred = "integer"
             else:
@@ -175,6 +196,16 @@ def infer_column_profiles(df: pd.DataFrame) -> list[ColumnProfile]:
             inferred = "string"
             stats = {"avg_length": round(float(non_null.astype(str).str.len().mean()), 1) if len(non_null) > 0 else 0}
 
+        duplicate_pct = round(1.0 - (unique_count / max(len(non_null), 1)), 4) if len(non_null) > 0 else 0.0
+        distinct_value_count = unique_count
+        min_val = str(stats.get("min", "")) if stats.get("min") is not None else None
+        max_val = str(stats.get("max", "")) if stats.get("max") is not None else None
+        avg_val = stats.get("mean")
+        median_val = stats.get("median")
+
+        freq_dist = stats.get("value_counts") if "value_counts" in stats else None
+        dom_pattern = _dominant_pattern(non_null) if inferred in ("string", "categorical") else None
+
         profiles.append(ColumnProfile(
             name=str(col),
             inferred_type=inferred,
@@ -183,5 +214,13 @@ def infer_column_profiles(df: pd.DataFrame) -> list[ColumnProfile]:
             total_count=total,
             sample_values=sample,
             stats=stats,
+            duplicate_pct=duplicate_pct,
+            distinct_value_count=distinct_value_count,
+            min_value=min_val,
+            max_value=max_val,
+            average=avg_val,
+            median=median_val,
+            frequency_distribution=freq_dist,
+            dominant_pattern=dom_pattern,
         ))
     return profiles

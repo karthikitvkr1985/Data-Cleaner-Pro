@@ -342,3 +342,95 @@ export const ExportSessionFormat = {
   csv: 'csv',
 } as const;
 
+export interface SchemaMeaning {
+  column_name: string;
+  inferred_meaning: string;
+  confidence: number;
+  is_primary_key?: boolean;
+  is_foreign_key?: boolean;
+  matching_keywords?: string[];
+}
+
+export interface OutlierEntry {
+  row_index: number;
+  value: number;
+  confidence: number;
+}
+
+export interface OutlierResult {
+  column_name: string;
+  outlier_count: number;
+  total_values: number;
+  outlier_percentage: number;
+  method: string;
+  outliers: OutlierEntry[];
+  iqr_bounds?: Record<string, number> | null;
+}
+
+export interface AnomalyResult {
+  column_name: string;
+  anomaly_type: string;
+  count: number;
+  anomalies: Record<string, unknown>[];
+}
+
+export interface ConsistencyIssue {
+  column_name: string;
+  issue_type: string;
+  description: string;
+  row_count: number;
+  severity: string;
+  affected_values: string[];
+  suggestion: string;
+}
+
+export interface QualityDimension {
+  name: string;
+  score?: number | null;
+  description: string;
+  passed: number;
+  total: number;
+}
+
+export interface DataQualityScore {
+  overall_score: number;
+  dimensions: QualityDimension[];
+  row_count: number;
+  column_count: number;
+  before_after_improvement?: number | null;
+}
+
+export interface AuditEntry {
+  entry_id: string;
+  timestamp: string;
+  action_type: string;
+  module: string;
+  description: string;
+  details: Record<string, unknown>;
+  confidence: number;
+}
+
+export interface ReportSection {
+  title: string;
+  content: Record<string, unknown>;
+}
+
+export interface WorkflowSummary {
+  total_suggestions: number;
+  applied_count: number;
+  rejected_count: number;
+  pending_count: number;
+  total_operations: number;
+  outlier_count: number;
+  anomaly_count: number;
+  consistency_issue_count: number;
+  data_quality_score: number;
+}
+
+export interface CleaningReport {
+  session_id: string;
+  generated_at: string;
+  sections: ReportSection[];
+  workflow_summary: WorkflowSummary;
+}
+

@@ -15,6 +15,11 @@ URL_RE = re.compile(r"^https?://[^\s<>\"]+", re.IGNORECASE)
 CURRENCY_RE = re.compile(r"[\$€£¥₹]|,(?=\d{3})")
 CONTROL_CHAR_RE = re.compile(r"[\x00-\x08\x0b-\x0c\x0e-\x1f\x7f]")
 DOUBLE_SPACE_RE = re.compile(r" {2,}")
+EMOJI_RE = re.compile(r"[\U0001F600-\U0001F64F\U0001F300-\U0001F5FF\U0001F680-\U0001F6FF\U0001F1E0-\U0001F1FF\u2600-\u26FF\u2700-\u27BF]")
+INVISIBLE_CHAR_RE = re.compile(r"[\u200B-\u200D\uFEFF\u00A0\u2060\u2061\u2062\u2063\u2064]")
+ILLEGAL_XML_RE = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]")
+INVALID_UNICODE_RE = re.compile(r"[\uD800-\uDFFF]")
+LEADING_TRAILING_WS_RE = re.compile(r"^\s+|\s+$")
 
 
 def generate_formatting_suggestions(
@@ -29,27 +34,25 @@ def generate_formatting_suggestions(
             continue
         series = df[col].dropna().astype(str)
 
-        # 1. Whitespace / control character issues
         ws_issues = _find_whitespace_issues(series, col)
         suggestions.extend(ws_issues)
 
-        # 2. Currency cleanup (string columns that contain numeric + symbols)
         if profile.inferred_type in ("string", "float", "integer"):
             curr_suggestions = _find_currency_issues(series, col, df[col])
             suggestions.extend(curr_suggestions)
 
-        # 3. Date normalization
         if profile.inferred_type == "datetime":
             date_suggestions = _find_date_issues(df[col], col)
             suggestions.extend(date_suggestions)
 
-        # 4. Email validation
         if profile.inferred_type in ("string", "categorical") and _looks_like_email_col(col):
             suggestions.extend(_find_email_issues(series, col))
 
-        # 5. URL validation
         if profile.inferred_type == "string" and _looks_like_url_col(col):
             suggestions.extend(_find_url_issues(series, col))
+
+        special_char_suggestions = _find_special_char_issues(series, col, df)
+        suggestions.extend(special_char_suggestions)
 
     return suggestions
 
@@ -180,3 +183,71 @@ def _find_url_issues(series: pd.Series, col: str) -> list[Suggestion]:
         category="validation",
         status="pending",
     )]
+
+
+# ── Special Character Handling (STEP 17) ──
+
+
+def _find_special_char_issues(series: pd.Series, col: str, df: pd.DataFrame) -> list[Suggestion]:
+    issues: list[Suggestion] = []
+
+    emoji_count = int(EMOJI_RE.search(series.str.cat(sep=" ")) is not None if len(series) > 0 else 0)
+    for val in series.head(100):
+        if EMOJI_RE.search(val):
+            emoji_count += 1
+
+    if emoji_count > 0:
+        cleaned_series = series.apply(lambda v: EMOJI_RE.sub("", v))
+        sample_original = next((v for v in series if EMOJI_RE.search(v)), "")
+        sample_cleaned = EMOJI_RE.sub("", sample_original)
+        if sample_cleaned.strip():
+            issues.append(Suggestion(
+                id=str(uuid.uuid4()),
+                row_index=None,
+                column_name=col,
+                original_value=sample_original,
+                proposed_value=sample_cleaned.strip(),
+                reason=f"{emoji_count} values in '{col}' contain emoji characters — removing emojis",
+                category="format",
+                status="pending",
+            ))
+
+    invisible_count = 0
+    invisible_values = []
+    for val in series.head(100):
+        if INVISIBLE_CHAR_RE.search(val):
+            invisible_count += 1
+            invisible_values.append(val)
+
+    if invisible_count > 0:
+        sample = invisible_values[0] if invisible_values else ""
+        cleaned = INVISIBLE_CHAR_RE.sub("", sample)
+        issues.append(Suggestion(
+            id=str(uuid.uuid4()),
+            row_index=None,
+            column_name=col,
+            original_value=repr(sample),
+            proposed_value=cleaned,
+            reason=f"{invisible_count} values in '{col}' contain invisible Unicode characters (zero-width spaces, BOM, etc.)",
+            category="format",
+            status="pending",
+        ))
+
+    unsupported_count = 0
+    for val in series.head(200):
+        if ILLEGAL_XML_RE.search(val) or INVALID_UNICODE_RE.search(val):
+            unsupported_count += 1
+
+    if unsupported_count > 0:
+        issues.append(Suggestion(
+            id=str(uuid.uuid4()),
+            row_index=None,
+            column_name=col,
+            original_value=None,
+            proposed_value="remove",
+            reason=f"{unsupported_count} values in '{col}' contain illegal XML characters or invalid Unicode",
+            category="format",
+            status="pending",
+        ))
+
+    return issues

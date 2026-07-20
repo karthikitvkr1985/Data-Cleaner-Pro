@@ -8,7 +8,7 @@ interface SessionState {
   selectedSheet: string | null;
   columns: ColumnProfile[];
   selectedColumn: string | null;
-  activePanel: 'grid' | 'review' | 'inspector' | 'recipe' | 'issues' | 'validation' | 'health';
+  activePanel: 'grid' | 'review' | 'inspector' | 'recipe' | 'issues' | 'validation' | 'health' | 'quality' | 'audit' | 'report';
   undoStack: string[];
   dataGeneration: number;
   setSession: (sessionId: string, filename: string, sheets: string[]) => void;

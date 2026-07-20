@@ -15,6 +15,13 @@ from backend.models.schemas import (
     ValidationRuleUpdate,
     ValidationRule,
     DeleteResult,
+    OutlierResult,
+    AnomalyResult,
+    ConsistencyIssue,
+    DataQualityScore,
+    AuditEntry,
+    CleaningReport,
+    SchemaMeaning,
 )
 from datetime import datetime
 
@@ -78,7 +85,6 @@ async def detect_structure(
         start_row=body.start_row,
     )
 
-    # Load the dataframe with the detected header
     df, df_original = load_dataframe(
         data["file_bytes"],
         data["file_ext"],
@@ -99,7 +105,6 @@ async def analyze_session(session_id: str, request: Request) -> AnalysisResult:
     data = _require_session(store, session_id)
 
     if data.get("df") is None:
-        # Auto-load first sheet if not yet loaded
         from backend.engine.type_inference import load_dataframe
         sheet = data["sheets"][0] if data["sheets"] else "Sheet1"
         df, df_original = load_dataframe(
@@ -117,24 +122,41 @@ async def analyze_session(session_id: str, request: Request) -> AnalysisResult:
     from backend.engine.deduplication import generate_dedup_suggestions
     from backend.engine.missing_values import generate_missing_value_suggestions
     from backend.engine.validation import generate_validation_rules, run_validation
+    from backend.engine.outlier_detection import detect_outliers
+    from backend.engine.anomaly_detection import detect_anomalies
+    from backend.engine.consistency import check_consistency
+    from backend.engine.quality_scoring import compute_quality_scores
+    from backend.engine.schema_inference import infer_schema_meanings
 
-    # 1. Type inference
     columns = infer_column_profiles(df)
     data["columns"] = columns
 
-    # 2. Generate suggestions from each module
     all_suggestions: list = []
     all_suggestions.extend(generate_formatting_suggestions(df, columns))
     all_suggestions.extend(generate_dedup_suggestions(df, columns))
     all_suggestions.extend(generate_missing_value_suggestions(df, columns))
 
-    # 3. Validation rules + violations
     rules = generate_validation_rules(columns, df)
     data["validation_rules"] = {r.rule_id: r for r in rules}
     all_suggestions.extend(run_validation(df, rules))
 
-    # Store suggestions as dict keyed by id
     data["suggestions"] = {s.id: s for s in all_suggestions}
+
+    outliers = detect_outliers(df, columns)
+    data["outliers"] = outliers
+
+    anomalies = detect_anomalies(df, columns)
+    data["anomalies"] = anomalies
+
+    consistency_issues = check_consistency(df, columns)
+    data["consistency_issues"] = consistency_issues
+
+    schema_meanings = infer_schema_meanings(df, columns)
+    data["schema_meanings"] = schema_meanings
+
+    quality_score = compute_quality_scores(df, data.get("df_original"), columns, all_suggestions)
+    data["quality_score"] = quality_score
+
     store.set(session_id, data)
 
     return AnalysisResult(columns=columns, suggestions=all_suggestions)
@@ -190,3 +212,91 @@ async def update_validation_rule(
     data["validation_rules"] = rules
     store.set(session_id, data)
     return rule
+
+
+# ── New Enterprise Endpoints ───────────────────────────────────────────────
+
+
+@router.get("/sessions/{session_id}/outliers", response_model=list[OutlierResult])
+async def get_outliers(session_id: str, request: Request) -> list[OutlierResult]:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    return data.get("outliers", [])
+
+
+@router.get("/sessions/{session_id}/anomalies", response_model=list[AnomalyResult])
+async def get_anomalies(session_id: str, request: Request) -> list[AnomalyResult]:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    return data.get("anomalies", [])
+
+
+@router.get("/sessions/{session_id}/consistency-issues", response_model=list[ConsistencyIssue])
+async def get_consistency_issues(session_id: str, request: Request) -> list[ConsistencyIssue]:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    return data.get("consistency_issues", [])
+
+
+@router.get("/sessions/{session_id}/quality-score", response_model=DataQualityScore)
+async def get_quality_score(session_id: str, request: Request) -> DataQualityScore:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    quality = data.get("quality_score")
+    if quality is None:
+        return DataQualityScore(overall_score=0.0)
+    return quality
+
+
+@router.get("/sessions/{session_id}/schema-meanings", response_model=list[SchemaMeaning])
+async def get_schema_meanings(session_id: str, request: Request) -> list[SchemaMeaning]:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    return data.get("schema_meanings", [])
+
+
+@router.get("/sessions/{session_id}/audit-log", response_model=list[AuditEntry])
+async def get_audit_log(session_id: str, request: Request) -> list[AuditEntry]:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    from backend.engine.audit import build_audit_log
+    entries = build_audit_log(
+        session_id,
+        data.get("df_original"),
+        data.get("df"),
+        list(data.get("suggestions", {}).values()),
+        data.get("recipe_steps", []),
+    )
+    return entries
+
+
+@router.get("/sessions/{session_id}/cleaning-report", response_model=CleaningReport)
+async def get_cleaning_report(session_id: str, request: Request) -> CleaningReport:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+    from backend.engine.report import generate_cleaning_report
+
+    suggestions = list(data.get("suggestions", {}).values())
+    columns = data.get("columns", [])
+    recipe_steps = data.get("recipe_steps", [])
+    quality = data.get("quality_score")
+    outliers = data.get("outliers", [])
+    anomalies = data.get("anomalies", [])
+    consistency_issues = data.get("consistency_issues", [])
+
+    outlier_count = sum(o.outlier_count for o in outliers)
+    anomaly_count = sum(a.count for a in anomalies)
+    consistency_count = len(consistency_issues)
+
+    report = generate_cleaning_report(
+        session_id=session_id,
+        filename=data.get("original_filename", "unknown"),
+        columns=columns,
+        suggestions=suggestions,
+        recipe_steps=recipe_steps,
+        quality_score=quality.overall_score if quality else None,
+        outlier_count=outlier_count,
+        anomaly_count=anomaly_count,
+        consistency_issue_count=consistency_count,
+    )
+    return report
