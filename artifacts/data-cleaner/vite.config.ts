@@ -61,6 +61,12 @@ export default defineConfig({
     },
     dedupe: ['react', 'react-dom'],
   },
+  optimizeDeps: {
+    // Exclude workspace packages from pre-bundling so Vite always processes
+    // their source TypeScript directly. This avoids stale cache issues when
+    // new hooks are added to generated/api.ts.
+    exclude: ['@workspace/api-client-react'],
+  },
   root: path.resolve(import.meta.dirname),
   build: {
     outDir: path.resolve(import.meta.dirname, 'dist/public'),
@@ -73,6 +79,8 @@ export default defineConfig({
     allowedHosts: true,
     fs: {
       strict: true,
+      // Allow access to all workspace packages (lib/*, etc.)
+      allow: [path.resolve(import.meta.dirname, '../..')],
     },
     proxy: {
       '/api': {
