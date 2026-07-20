@@ -82,32 +82,89 @@ function StatBox({ label, value, color }: { label: string; value: number; color?
 function RenderSectionContent({ section }: { section: { title: string; content: Record<string, unknown> } }) {
   try {
     const content = section.content;
-
-    if (section.title === 'Object' || typeof content !== 'object') {
-      return <pre className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 overflow-x-auto">{JSON.stringify(content, null, 2)}</pre>;
-    }
-
     const entries = Object.entries(content);
+
+    if (entries.length === 0) {
+      return <p className="text-xs text-muted-foreground italic">No data</p>;
+    }
 
     return (
       <div className="space-y-2">
         {entries.map(([key, value]) => (
           <div key={key} className="bg-card border rounded-lg p-3">
-            <div className="text-xs font-medium text-foreground capitalize mb-1">{key.replace(/_/g, ' ')}</div>
-            <div className="text-xs text-muted-foreground">
-              {typeof value === 'object' ? (
-                <pre className="text-[10px] bg-muted/20 rounded p-2 overflow-x-auto max-h-40">
-                  {JSON.stringify(value, null, 2)}
-                </pre>
-              ) : (
-                String(value)
-              )}
-            </div>
+            <div className="text-xs font-medium text-foreground capitalize mb-1.5">{key.replace(/_/g, ' ')}</div>
+            <RenderValue value={value} depth={0} />
           </div>
         ))}
       </div>
     );
   } catch {
-    return <pre className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">{JSON.stringify(section.content, null, 2)}</pre>;
+    return <pre className="text-xs text-muted-foreground bg-muted/30 rounded-lg p-3 overflow-x-auto">{JSON.stringify(section.content, null, 2)}</pre>;
   }
+}
+
+function RenderValue({ value, depth }: { value: unknown; depth: number }) {
+  if (value == null) {
+    return <span className="text-xs text-muted-foreground/50 italic">null</span>;
+  }
+
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return <span className="text-xs text-muted-foreground">{String(value)}</span>;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) {
+      return <span className="text-xs text-muted-foreground/50 italic">empty list</span>;
+    }
+    if (value.every((v) => typeof v === 'string' || typeof v === 'number')) {
+      return (
+        <div className="flex flex-wrap gap-1">
+          {value.slice(0, 20).map((item, i) => (
+            <span key={i} className="text-[10px] bg-muted/40 text-muted-foreground px-1.5 py-0.5 rounded">
+              {String(item)}
+            </span>
+          ))}
+          {value.length > 20 && <span className="text-[10px] text-muted-foreground/50">+{value.length - 20} more</span>}
+        </div>
+      );
+    }
+    if (depth < 2) {
+      return (
+        <div className="space-y-1.5">
+          {value.slice(0, 10).map((item, i) => (
+            <div key={i} className="bg-muted/20 rounded p-2">
+              {typeof item === 'object' && item !== null
+                ? Object.entries(item as Record<string, unknown>).map(([k, v]) => (
+                    <div key={k} className="flex gap-2 text-[10px]">
+                      <span className="font-medium text-muted-foreground/70 w-24 shrink-0 truncate">{k}:</span>
+                      <RenderValue value={v} depth={depth + 1} />
+                    </div>
+                  ))
+                : <span className="text-xs text-muted-foreground">{String(item)}</span>}
+            </div>
+          ))}
+          {value.length > 10 && <div className="text-[10px] text-muted-foreground/50 italic">... and {value.length - 10} more</div>}
+        </div>
+      );
+    }
+    return <pre className="text-[10px] text-muted-foreground/60 bg-muted/20 rounded p-2 overflow-x-auto max-h-32">{JSON.stringify(value, null, 2)}</pre>;
+  }
+
+  if (typeof value === 'object') {
+    if (depth < 2) {
+      return (
+        <div className="space-y-1">
+          {Object.entries(value as Record<string, unknown>).map(([k, v]) => (
+            <div key={k} className="flex gap-2 text-xs">
+              <span className="font-medium text-muted-foreground/70 w-28 shrink-0 truncate">{k.replace(/_/g, ' ')}:</span>
+              <RenderValue value={v} depth={depth + 1} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return <pre className="text-[10px] text-muted-foreground/60 bg-muted/20 rounded p-2 overflow-x-auto max-h-32">{JSON.stringify(value, null, 2)}</pre>;
+  }
+
+  return <span className="text-xs text-muted-foreground">{String(value)}</span>;
 }

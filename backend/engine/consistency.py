@@ -77,36 +77,60 @@ def _check_id_consistency(df: pd.DataFrame, columns: list[ColumnProfile]) -> lis
 def _check_referential_integrity(df: pd.DataFrame, columns: list[ColumnProfile]) -> list[ConsistencyIssue]:
     issues: list[ConsistencyIssue] = []
 
-    id_cols = [c.name for c in columns if any(kw in c.name.lower() for kw in ["id", "code"]) and c.name in df.columns]
+    id_cols_map: dict[str, str] = {}
+    for c in columns:
+        if c.name not in df.columns:
+            continue
+        cl = c.name.lower()
+        if cl == "id" or cl.endswith("_id") or cl.endswith("_code") or cl == "code":
+            base = cl.replace("_id", "").replace("_code", "").replace("code_", "")
+            id_cols_map[base] = c.name
+        elif any(kw in cl for kw in ["identifier", "key", "pk"]) and c.unique_count == c.total_count:
+            id_cols_map[cl] = c.name
 
     for profile in columns:
         col = profile.name
         if col not in df.columns:
             continue
-        col_lower = col.lower()
-        if not any(kw in col_lower for kw in ["parent", "ref", "fk", "foreign", "_id"]) and not col_lower.endswith("_id"):
+        cl = col.lower()
+        if not cl.endswith("_id") and not any(kw in cl for kw in ["parent_", "ref_", "fk_", "foreign_"]):
             continue
 
-        ref_col = col.replace("_id", "_id")
-        ref_base = col.replace("_id", "").replace("parent_", "").replace("ref_", "")
-        potential_refs = [c for c in id_cols if ref_base.lower() in c.lower() or ref_base in c]
+        base = cl.replace("_id", "").replace("parent_", "").replace("ref_", "").replace("fk_", "").replace("foreign_", "")
+        target_col = None
 
-        if potential_refs:
-            ref_series = df[col].dropna().astype(str)
-            target_series = df[potential_refs[0]].dropna().astype(str)
-            target_set = set(target_series)
-            orphans = ref_series[~ref_series.isin(target_set)]
-            orphan_count = len(orphans)
-            if orphan_count > 0:
-                issues.append(ConsistencyIssue(
-                    column_name=col,
-                    issue_type="orphan_reference",
-                    description=f"'{col}' has {orphan_count} values that don't exist in referenced column '{potential_refs[0]}'",
-                    row_count=orphan_count,
-                    severity="medium",
-                    affected_values=orphans.head(5).tolist(),
-                    suggestion=f"Review {orphan_count} orphan references — they may refer to deleted records",
-                ))
+        if base in id_cols_map:
+            target_col = id_cols_map[base]
+        elif base + "_id" in id_cols_map:
+            target_col = id_cols_map[base + "_id"]
+        elif base + "_code" in id_cols_map:
+            target_col = id_cols_map[base + "_code"]
+        else:
+            exact_matches = [v for k, v in id_cols_map.items() if k == base]
+            if exact_matches:
+                target_col = exact_matches[0]
+            else:
+                continue
+
+        ref_series = df[col].dropna().astype(str)
+        target_series = df[target_col].dropna().astype(str)
+        target_set = set(target_series)
+
+        if ref_series.empty:
+            continue
+
+        orphans = ref_series[~ref_series.isin(target_set)]
+        orphan_count = len(orphans)
+        if orphan_count > 0 and orphan_count < len(ref_series):
+            issues.append(ConsistencyIssue(
+                column_name=col,
+                issue_type="orphan_reference",
+                description=f"'{col}' has {orphan_count} value(s) not found in referenced column '{target_col}'",
+                row_count=orphan_count,
+                severity="medium",
+                affected_values=orphans.head(5).tolist(),
+                suggestion=f"Review {orphan_count} orphan {'reference' if orphan_count == 1 else 'references'} in '{col}' — they may refer to deleted or missing records",
+            ))
 
     return issues
 
