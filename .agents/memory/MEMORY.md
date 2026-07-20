@@ -1,3 +1,5 @@
 - [Python venv setup](python-venv.md) — packages live in .venv (uv venv); workflow must use absolute path /home/runner/workspace/.venv/bin/uvicorn
 - [api-zod index.ts codegen](api-zod-codegen.md) — Orval regenerates lib/api-zod/src/index.ts each run; must overwrite after orval to remove ./generated/types export
 - [DataClean architecture](dataclean-arch.md) — FastAPI backend in backend/, React frontend in artifacts/data-cleaner/, stateless in-memory sessions
+- [FastAPI route ordering — bulk before param](fastapi-route-order.md) — literal /bulk route must be declared before /{param} route or FastAPI matches "bulk" as the param value (404)
+- [suggestion_engine.py regex quoting](suggestion-engine-regex.md) — character class ['\""] breaks Python string parser; use ['"] (no backslash) inside double-quoted raw strings

@@ -1,121 +1,175 @@
-import React from 'react';
+/**
+ * Change History — formerly "Cleaning Recipe"
+ *
+ * Every fix you apply (or DataClean applies automatically) is recorded here
+ * as a numbered step. This gives you a full audit trail.
+ *
+ * You can also download this history and drag a new file onto this panel to
+ * run the exact same cleaning pipeline on next month's data export.
+ */
+import React, { useState } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { useSessionStore } from '../store/sessionStore';
 import { useGetRecipe } from '@workspace/api-client-react';
 import type { RecipeStep } from '@workspace/api-client-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Download, FileJson, ArrowRight, PlaySquare } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { exportRecipe, applyRecipeToNewFile } from '../api/client';
+import { History, Download, UploadCloud, CheckCircle2, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import { useDropzone } from 'react-dropzone';
+
+const MODULE_LABEL: Record<string, { icon: string; label: string }> = {
+  structure:  { icon: '🏗', label: 'Structure fix' },
+  type:       { icon: '🔢', label: 'Type conversion' },
+  format:     { icon: '✏️', label: 'Format fix' },
+  dedup:      { icon: '👯', label: 'Duplicate removed' },
+  missing:    { icon: '⬜', label: 'Missing value filled' },
+  validation: { icon: '🚨', label: 'Rule violation fixed' },
+  nl:         { icon: '✨', label: 'Custom instruction' },
+};
 
 export function RecipePanel() {
   const { sessionId } = useSessionStore();
-  const { toast } = useToast();
+  const { toast }     = useToast();
+  const [isApplying,  setIsApplying] = useState(false);
+  const [newFileName, setNewFileName] = useState('');
 
-  const { data: recipeData, isLoading } = useGetRecipe(sessionId!, {
-    query: { enabled: !!sessionId }
+  const { data, isLoading } = useGetRecipe(sessionId!, {
+    query: { enabled: !!sessionId },
   } as any);
 
-  const [isApplying, setIsApplying] = React.useState(false);
+  const steps: RecipeStep[] = data?.steps ?? [];
 
-  const handleExport = async () => {
+  const handleDownload = async () => {
     try {
       await exportRecipe(sessionId!);
-      toast({ title: 'Recipe Exported', description: 'JSON file downloaded successfully.' });
+      toast({ title: 'Recipe downloaded', description: 'JSON file saved — drag it onto this panel to re-apply.' });
     } catch (e: any) {
-      toast({ title: 'Export Failed', description: e.message, variant: 'destructive' });
-    }
-  };
-
-  const onDrop = async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length === 0) return;
-    try {
-      setIsApplying(true);
-      const res = await applyRecipeToNewFile(sessionId!, acceptedFiles[0]);
-      toast({ 
-        title: 'Recipe Applied', 
-        description: `Successfully applied ${res.steps_applied} steps. Skipped ${res.steps_skipped}. Session ID: ${res.new_session_id}` 
-      });
-    } catch (e: any) {
-      toast({ title: 'Apply Failed', description: e.message, variant: 'destructive' });
-    } finally {
-      setIsApplying(false);
+      toast({ title: 'Download failed', description: e.message, variant: 'destructive' });
     }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { 'text/csv': ['.csv'], 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
-    multiple: false
+    accept: {
+      'text/csv': ['.csv'],
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+      'application/vnd.ms-excel': ['.xls'],
+    },
+    multiple: false,
+    onDrop: async (files) => {
+      if (!files[0] || !sessionId) return;
+      setIsApplying(true);
+      setNewFileName(files[0].name);
+      try {
+        await applyRecipeToNewFile(sessionId, files[0]);
+        toast({ title: 'Recipe applied!', description: `"${files[0].name}" was cleaned using the same ${steps.length} steps.` });
+      } catch (e: any) {
+        toast({ title: 'Failed', description: e.message, variant: 'destructive' });
+      } finally {
+        setIsApplying(false);
+        setNewFileName('');
+      }
+    },
   });
-
-  const steps = recipeData?.steps || [];
 
   return (
     <div className="flex flex-col h-full bg-card border-l">
-      <div className="p-4 border-b space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2 text-foreground">
-            <FileJson className="w-5 h-5 text-primary" />
-            Cleaning Recipe
-          </h2>
-          <Button variant="outline" size="sm" onClick={handleExport} className="gap-2">
-            <Download className="w-4 h-4" /> Export JSON
-          </Button>
-        </div>
-        <p className="text-sm text-muted-foreground">
-          This recipe records every transformation applied to your data. Export it to reproduce these steps later, or apply it to a new file instantly.
-        </p>
-      </div>
 
-      <ScrollArea className="flex-1 p-4">
-        {isLoading ? (
-          <div className="text-sm text-muted-foreground">Loading recipe...</div>
-        ) : steps.length === 0 ? (
-          <div className="text-center py-10 text-muted-foreground text-sm">
-            No transformations applied yet. Accept suggestions or run commands to build your recipe.
+      {/* ── Header ── */}
+      <div className="p-4 border-b space-y-2 shrink-0">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
+              <History className="w-4 h-4 text-primary" />
+              Change History
+            </h2>
+            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+              Every fix applied to your data, in order. Download it to re-use on any future file.
+            </p>
           </div>
-        ) : (
-          <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border before:to-transparent">
-            {steps.map((step: RecipeStep, i: number) => (
-              <div key={step.step_id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-card bg-primary text-primary-foreground shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10 font-bold text-sm">
-                  {i + 1}
-                </div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-lg border bg-card shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <Badge variant="secondary" className="uppercase text-[10px] tracking-wider">{step.module}</Badge>
-                  </div>
-                  <p className="text-sm text-foreground">{step.description}</p>
-                  {Object.keys(step.params || {}).length > 0 && (
-                    <div className="mt-2 text-xs font-mono text-muted-foreground bg-muted p-2 rounded">
-                      {JSON.stringify(step.params)}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+          {steps.length > 0 && (
+            <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 shrink-0" onClick={handleDownload}>
+              <Download className="w-3.5 h-3.5" /> Download
+            </Button>
+          )}
+        </div>
+
+        {steps.length > 0 && (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-1.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+            {steps.length} change{steps.length !== 1 ? 's' : ''} recorded — ready to replay on a new file
           </div>
         )}
+      </div>
+
+      {/* ── Steps ── */}
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-2">
+          {isLoading ? (
+            <div className="flex items-center gap-2 text-muted-foreground text-sm py-6 justify-center">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading history…
+            </div>
+          ) : steps.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground space-y-2">
+              <History className="w-9 h-9 mx-auto opacity-20" />
+              <p className="text-sm font-medium">No changes yet</p>
+              <p className="text-xs max-w-[200px] mx-auto leading-relaxed">
+                Apply fixes in <em>Fix Suggestions</em> or run a command — each change will appear here.
+              </p>
+            </div>
+          ) : (
+            steps.map((step: RecipeStep, i: number) => {
+              const meta = MODULE_LABEL[step.module] ?? { icon: '•', label: step.module };
+              return (
+                <div key={step.step_id} className="flex gap-3 items-start">
+                  {/* Step number */}
+                  <div className="w-6 h-6 rounded-full bg-primary/15 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    {i + 1}
+                  </div>
+                  <div className="flex-1 min-w-0 pb-2 border-b border-border/30 last:border-b-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-base leading-none">{meta.icon}</span>
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{meta.label}</span>
+                    </div>
+                    <p className="text-xs text-foreground leading-snug">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </ScrollArea>
 
-      <div className="p-4 border-t bg-muted/30">
-        <h3 className="text-sm font-semibold mb-3 flex items-center gap-2"><PlaySquare className="w-4 h-4 text-primary" /> Apply to New File</h3>
-        <div 
-          {...getRootProps()} 
-          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors
-            ${isDragActive ? 'border-primary bg-primary/5' : 'border-border hover:bg-accent/50'}
-            ${isApplying ? 'opacity-50 pointer-events-none' : ''}
-          `}
-        >
-          <input {...getInputProps()} />
-          <div className="text-sm text-muted-foreground">
-            {isApplying ? 'Applying recipe...' : 'Drag & drop a new .csv or .xlsx here to apply this exact cleaning pipeline.'}
+      {/* ── Apply to new file drop zone ── */}
+      {steps.length > 0 && (
+        <div className="p-4 border-t bg-muted/20 shrink-0">
+          <p className="text-xs font-medium text-foreground mb-2">
+            Re-run this exact cleaning on another file:
+          </p>
+          <div
+            {...getRootProps()}
+            className={`border-2 border-dashed rounded-xl p-4 text-center cursor-pointer transition-colors ${
+              isDragActive    ? 'border-primary bg-primary/5' :
+              isApplying      ? 'border-border opacity-50 pointer-events-none' :
+              'border-border hover:border-primary/40 hover:bg-muted/30'
+            }`}
+          >
+            <input {...getInputProps()} />
+            {isApplying ? (
+              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Applying {steps.length} steps to "{newFileName}"…
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-1.5">
+                <UploadCloud className="w-6 h-6 text-muted-foreground/50" />
+                <p className="text-xs text-muted-foreground">Drop a .csv or .xlsx here</p>
+                <p className="text-[10px] text-muted-foreground/60">DataClean will apply all {steps.length} steps automatically</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

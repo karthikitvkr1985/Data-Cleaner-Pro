@@ -77,53 +77,6 @@ def _apply_suggestion_to_df(df: pd.DataFrame, suggestion: Suggestion) -> pd.Data
     return df
 
 
-@router.post("/sessions/{session_id}/suggestions/{suggestion_id}", response_model=ApplyResult)
-async def update_suggestion(
-    session_id: str,
-    suggestion_id: str,
-    body: SuggestionUpdateInput,
-    request: Request,
-) -> ApplyResult:
-    store = _get_store(request)
-    data = _require_session(store, session_id)
-
-    suggestions: dict = data["suggestions"]
-    if suggestion_id not in suggestions:
-        raise HTTPException(status_code=404, detail=f"Suggestion '{suggestion_id}' not found")
-
-    suggestion: Suggestion = suggestions[suggestion_id]
-
-    if body.status == "edited":
-        suggestion.status = "edited"
-        suggestion.edited_value = body.edited_value
-    else:
-        suggestion.status = body.status
-
-    applied = False
-    if suggestion.status in ("accepted", "edited") and data.get("df") is not None:
-        data["df"] = _apply_suggestion_to_df(data["df"], suggestion)
-        # Record recipe step
-        step = RecipeStep(
-            step_id=str(uuid.uuid4()),
-            module="format",
-            description=f"{suggestion.category}: {suggestion.reason} on '{suggestion.column_name}'",
-            params={
-                "suggestion_id": suggestion_id,
-                "category": suggestion.category,
-                "column_name": suggestion.column_name,
-                "row_index": suggestion.row_index,
-                "value": suggestion.proposed_value if suggestion.status == "accepted" else body.edited_value,
-                "status": suggestion.status,
-            },
-        )
-        data["recipe_steps"].append(step)
-        applied = True
-
-    data["suggestions"][suggestion_id] = suggestion
-    store.set(session_id, data)
-    return ApplyResult(suggestion=suggestion, applied=applied)
-
-
 @router.post("/sessions/{session_id}/suggestions/bulk", response_model=BulkApplyResult)
 async def bulk_update_suggestions(
     session_id: str,
@@ -169,6 +122,55 @@ async def bulk_update_suggestions(
 
     store.set(session_id, data)
     return BulkApplyResult(updated_count=len(updated), suggestions=updated)
+
+
+# NOTE: This route MUST come after /suggestions/bulk above.
+# FastAPI matches routes in registration order; placing {suggestion_id} first would
+# match the literal string "bulk" before the explicit /bulk route is tried.
+@router.post("/sessions/{session_id}/suggestions/{suggestion_id}", response_model=ApplyResult)
+async def update_suggestion(
+    session_id: str,
+    suggestion_id: str,
+    body: SuggestionUpdateInput,
+    request: Request,
+) -> ApplyResult:
+    store = _get_store(request)
+    data = _require_session(store, session_id)
+
+    suggestions: dict = data["suggestions"]
+    if suggestion_id not in suggestions:
+        raise HTTPException(status_code=404, detail=f"Suggestion '{suggestion_id}' not found")
+
+    suggestion: Suggestion = suggestions[suggestion_id]
+
+    if body.status == "edited":
+        suggestion.status = "edited"
+        suggestion.edited_value = body.edited_value
+    else:
+        suggestion.status = body.status
+
+    applied = False
+    if suggestion.status in ("accepted", "edited") and data.get("df") is not None:
+        data["df"] = _apply_suggestion_to_df(data["df"], suggestion)
+        step = RecipeStep(
+            step_id=str(uuid.uuid4()),
+            module="format",
+            description=f"{suggestion.category}: {suggestion.reason} on '{suggestion.column_name}'",
+            params={
+                "suggestion_id": suggestion_id,
+                "category": suggestion.category,
+                "column_name": suggestion.column_name,
+                "row_index": suggestion.row_index,
+                "value": suggestion.proposed_value if suggestion.status == "accepted" else body.edited_value,
+                "status": suggestion.status,
+            },
+        )
+        data["recipe_steps"].append(step)
+        applied = True
+
+    data["suggestions"][suggestion_id] = suggestion
+    store.set(session_id, data)
+    return ApplyResult(suggestion=suggestion, applied=applied)
 
 
 @router.get("/sessions/{session_id}/preview", response_model=PagedPreview)
