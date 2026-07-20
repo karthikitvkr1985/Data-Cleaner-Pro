@@ -237,7 +237,7 @@ export function Workspace() {
         {/* ── Sidebar nav ── */}
         <aside className={`
           ${navOpen ? 'flex' : 'hidden'} lg:flex
-          flex-col w-60 border-r bg-card pt-3 pb-4 shrink-0 z-30
+          flex-col w-60 border-r bg-card pt-3 pb-4 shrink-0 z-30 overflow-y-auto
           absolute inset-y-0 left-0 lg:relative lg:inset-auto shadow-xl lg:shadow-none
         `}>
 
@@ -274,7 +274,7 @@ export function Workspace() {
 
         {/* ── Data table (center) ── */}
         <main className={`
-          flex-1 min-w-0 p-4 overflow-hidden
+          flex-1 min-w-0 p-4 overflow-auto
           ${activePanel !== 'grid' ? 'hidden lg:block' : ''}
           ${activePanel === 'health' ? '!hidden' : ''}
         `}>
@@ -284,8 +284,8 @@ export function Workspace() {
         {/* ── Right / full panel ── */}
         {activePanel !== 'grid' && (
           <aside className={`
-            ${activePanel === 'health' ? 'w-full' : 'w-full lg:w-[440px] xl:w-[520px] 2xl:w-[600px]'}
-            bg-card shadow-xl z-10 overflow-hidden flex flex-col shrink-0
+            ${activePanel === 'health' ? 'w-full' : 'w-full lg:w-[480px] xl:w-[560px] 2xl:w-[640px]'}
+            bg-card shadow-xl z-10 overflow-x-auto overflow-y-hidden flex flex-col shrink-0
           `}>
             {activePanel === 'review'     && <ReviewQueue />}
             {activePanel === 'inspector'  && <ColumnInspector />}

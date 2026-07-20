@@ -267,7 +267,7 @@ export function ReviewQueue() {
                   <p className="text-xs text-muted-foreground leading-relaxed">{s.reason}</p>
 
                   {/* Before → After */}
-                  <div className="rounded-lg bg-muted/60 px-3 py-2 flex items-center gap-2 text-xs font-mono">
+                  <div className="rounded-lg bg-muted/60 px-3 py-2 flex items-center gap-2 text-xs font-mono overflow-hidden">
                     <div className="flex-1 min-w-0">
                       <div className="text-[9px] text-muted-foreground/60 mb-0.5 uppercase tracking-wider">Current value</div>
                       <div className="text-red-400 line-through truncate">{s.original_value ?? <em className="not-italic text-muted-foreground/50">empty</em>}</div>

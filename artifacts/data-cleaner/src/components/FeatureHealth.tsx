@@ -104,9 +104,9 @@ function FeatureCard({
 
       {/* user-value note */}
       {value && (
-        <div className="flex items-start gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2.5 py-1.5 border border-border/40">
+        <div className="flex items-start gap-1.5 text-[10px] text-muted-foreground bg-background/60 rounded px-2.5 py-1.5 border border-border/40 overflow-hidden">
           <Zap className="w-3 h-3 shrink-0 mt-0.5 text-primary/60" />
-          <span>{value}</span>
+          <span className="break-words">{value}</span>
         </div>
       )}
     </div>
@@ -168,18 +168,18 @@ export function FeatureHealth() {
 
       {/* ── Overall score ── */}
       {sessionId && (
-        <div className="mx-4 mt-4 p-3 rounded-xl bg-muted/60 border border-border flex items-center justify-between gap-4 shrink-0">
-          <div>
-            <div className="text-xs text-muted-foreground">Estimated time saved on this file</div>
-            <div className="text-2xl font-bold text-primary tabular-nums mt-0.5">{minutesSaved.toFixed(0)} min</div>
+        <div className="mx-4 mt-4 p-3 rounded-xl bg-muted/60 border border-border flex flex-wrap items-center justify-between gap-2 shrink-0">
+          <div className="min-w-0">
+            <div className="text-[11px] text-muted-foreground">Estimated time saved on this file</div>
+            <div className="text-xl font-bold text-primary tabular-nums mt-0.5">{minutesSaved.toFixed(0)} min</div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Auto-detected issues</div>
-            <div className="text-2xl font-bold text-foreground tabular-nums mt-0.5">{suggestions.length}</div>
+          <div className="text-right min-w-0">
+            <div className="text-[11px] text-muted-foreground">Auto-detected issues</div>
+            <div className="text-xl font-bold text-foreground tabular-nums mt-0.5">{suggestions.length}</div>
           </div>
-          <div className="text-right">
-            <div className="text-xs text-muted-foreground">Columns profiled</div>
-            <div className="text-2xl font-bold text-foreground tabular-nums mt-0.5">{columns.length}</div>
+          <div className="text-right min-w-0">
+            <div className="text-[11px] text-muted-foreground">Columns profiled</div>
+            <div className="text-xl font-bold text-foreground tabular-nums mt-0.5">{columns.length}</div>
           </div>
         </div>
       )}

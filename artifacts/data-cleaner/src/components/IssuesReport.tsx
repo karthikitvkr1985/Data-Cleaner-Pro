@@ -138,19 +138,19 @@ export function IssuesReport() {
                 </div>
 
                 {/* Description */}
-                <p className="text-xs text-foreground leading-snug">{issue.description}</p>
+                <p className="text-xs text-foreground leading-snug break-words">{issue.description}</p>
 
                 {/* Before → after */}
                 {(issue.original_value || issue.proposed_value) && (
-                  <div className="flex items-center gap-2 font-mono text-[11px] bg-muted/60 rounded px-2 py-1.5">
-                    <span className="text-red-400/80 line-through truncate max-w-[38%]">{issue.original_value ?? 'empty'}</span>
+                  <div className="flex items-center gap-2 font-mono text-[11px] bg-muted/60 rounded px-2 py-1.5 overflow-hidden">
+                    <span className="text-red-400/80 line-through truncate min-w-0 max-w-[38%]">{issue.original_value ?? 'empty'}</span>
                     <span className="text-muted-foreground shrink-0">→</span>
-                    <span className="text-emerald-400 truncate max-w-[48%]">{issue.proposed_value ?? 'remove'}</span>
+                    <span className="text-emerald-400 truncate min-w-0 max-w-[48%]">{issue.proposed_value ?? 'remove'}</span>
                   </div>
                 )}
 
                 {/* Resolution hint */}
-                <p className="text-[10px] text-muted-foreground/70 italic">{issue.resolution}</p>
+                <p className="text-[10px] text-muted-foreground/70 italic break-words">{issue.resolution}</p>
               </div>
             ))
           )}
