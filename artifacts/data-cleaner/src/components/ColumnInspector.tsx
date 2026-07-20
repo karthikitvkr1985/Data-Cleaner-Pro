@@ -134,7 +134,8 @@ export function ColumnInspector() {
 
   const isNumeric     = ['integer', 'float'].includes(column.inferred_type);
   const isCategorical = ['categorical', 'string'].includes(column.inferred_type);
-  const nullPct       = column.total_count > 0 ? (column.null_count / column.total_count) * 100 : 0;
+  const totalCount    = column.total_count ?? 0;
+  const nullPct       = totalCount > 0 ? (column.null_count / totalCount) * 100 : 0;
   const fillPct       = 100 - nullPct;
   const typeColor     = TYPE_COLORS[column.inferred_type] ?? '#94a3b8';
   const typePlain     = TYPE_PLAIN[column.inferred_type] ?? column.inferred_type;
@@ -172,7 +173,7 @@ export function ColumnInspector() {
           {/* ── At-a-glance stats ── */}
           <Section title="At a Glance">
             <div className="grid grid-cols-2 gap-2">
-              <Tile label="Total rows" value={column.total_count.toLocaleString()} />
+              <Tile label="Total rows" value={totalCount.toLocaleString()} />
               <Tile
                 label="Data filled"
                 value={`${fillPct.toFixed(0)}%`}

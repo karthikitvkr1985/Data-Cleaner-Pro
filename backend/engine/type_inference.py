@@ -81,7 +81,7 @@ def _try_datetime(series: pd.Series) -> bool:
         except Exception:
             pass
     try:
-        parsed = pd.to_datetime(sample, errors="coerce", infer_datetime_format=True)
+        parsed = pd.to_datetime(sample, errors="coerce")
         return parsed.notna().sum() / max(len(sample), 1) > 0.8
     except Exception:
         return False
@@ -127,7 +127,7 @@ def _categorical_stats(series: pd.Series) -> dict[str, Any]:
 
 def _datetime_stats(series: pd.Series) -> dict[str, Any]:
     try:
-        parsed = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
+        parsed = pd.to_datetime(series, errors="coerce")
         return {
             "min": str(parsed.min()) if not parsed.isna().all() else None,
             "max": str(parsed.max()) if not parsed.isna().all() else None,

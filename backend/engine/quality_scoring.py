@@ -102,7 +102,7 @@ def _validity_score(df: pd.DataFrame, columns: list[ColumnProfile]) -> QualityDi
         if profile.inferred_type in ("integer", "float"):
             invalid += int(pd.to_numeric(series, errors="coerce").isna().sum())
         elif profile.inferred_type == "datetime":
-            invalid += int(pd.to_datetime(series, errors="coerce", infer_datetime_format=True).isna().sum())
+            invalid += int(pd.to_datetime(series, errors="coerce").isna().sum())
 
     valid = total_cells - invalid
     score = round(valid / max(total_cells, 1) * 100, 1)
