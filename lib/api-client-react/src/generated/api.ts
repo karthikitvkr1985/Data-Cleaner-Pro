@@ -117,7 +117,7 @@ export const getHealthCheckQueryKey = () => {
     }
 
 
-export const getHealthCheckQueryOptions = <TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getHealthCheckQueryOptions = <TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -132,7 +132,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type HealthCheckQueryResult = NonNullable<Awaited<ReturnType<typeof healthCheck>>>
@@ -144,7 +144,7 @@ export type HealthCheckQueryError = ErrorType<unknown>
  */
 
 export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, TError = ErrorType<unknown>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof healthCheck>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -267,7 +267,7 @@ export const getGetSessionQueryKey = (sessionId: string,) => {
     }
 
 
-export const getGetSessionQueryOptions = <TData = Awaited<ReturnType<typeof getSession>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSessionQueryOptions = <TData = Awaited<ReturnType<typeof getSession>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -282,7 +282,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetSessionQueryResult = NonNullable<Awaited<ReturnType<typeof getSession>>>
@@ -294,7 +294,7 @@ export type GetSessionQueryError = ErrorType<void>
  */
 
 export function useGetSession<TData = Awaited<ReturnType<typeof getSession>>, TError = ErrorType<void>>(
- sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -569,7 +569,7 @@ export const getGetSuggestionsQueryKey = (sessionId: string,
 
 
 export const getGetSuggestionsQueryOptions = <TData = Awaited<ReturnType<typeof getSuggestions>>, TError = ErrorType<void>>(sessionId: string,
-    params?: GetSuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: GetSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -584,7 +584,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetSuggestionsQueryResult = NonNullable<Awaited<ReturnType<typeof getSuggestions>>>
@@ -597,7 +597,7 @@ export type GetSuggestionsQueryError = ErrorType<void>
 
 export function useGetSuggestions<TData = Awaited<ReturnType<typeof getSuggestions>>, TError = ErrorType<void>>(
  sessionId: string,
-    params?: GetSuggestionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: GetSuggestionsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getSuggestions>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -948,7 +948,7 @@ export const getGetPreviewQueryKey = (sessionId: string,
 
 
 export const getGetPreviewQueryOptions = <TData = Awaited<ReturnType<typeof getPreview>>, TError = ErrorType<void>>(sessionId: string,
-    params?: GetPreviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: GetPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -963,7 +963,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetPreviewQueryResult = NonNullable<Awaited<ReturnType<typeof getPreview>>>
@@ -976,7 +976,7 @@ export type GetPreviewQueryError = ErrorType<void>
 
 export function useGetPreview<TData = Awaited<ReturnType<typeof getPreview>>, TError = ErrorType<void>>(
  sessionId: string,
-    params?: GetPreviewParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: GetPreviewParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPreview>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -1026,7 +1026,7 @@ export const getGetRecipeQueryKey = (sessionId: string,) => {
     }
 
 
-export const getGetRecipeQueryOptions = <TData = Awaited<ReturnType<typeof getRecipe>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetRecipeQueryOptions = <TData = Awaited<ReturnType<typeof getRecipe>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1041,7 +1041,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetRecipeQueryResult = NonNullable<Awaited<ReturnType<typeof getRecipe>>>
@@ -1053,7 +1053,7 @@ export type GetRecipeQueryError = ErrorType<void>
  */
 
 export function useGetRecipe<TData = Awaited<ReturnType<typeof getRecipe>>, TError = ErrorType<void>>(
- sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecipe>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -1188,7 +1188,7 @@ export const getExportSessionQueryKey = (sessionId: string,
 
 
 export const getExportSessionQueryOptions = <TData = Awaited<ReturnType<typeof exportSession>>, TError = ErrorType<void>>(sessionId: string,
-    params?: ExportSessionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: ExportSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1203,7 +1203,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type ExportSessionQueryResult = NonNullable<Awaited<ReturnType<typeof exportSession>>>
@@ -1216,7 +1216,7 @@ export type ExportSessionQueryError = ErrorType<void>
 
 export function useExportSession<TData = Awaited<ReturnType<typeof exportSession>>, TError = ErrorType<void>>(
  sessionId: string,
-    params?: ExportSessionParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+    params?: ExportSessionParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof exportSession>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -1266,7 +1266,7 @@ export const getGetIssuesReportQueryKey = (sessionId: string,) => {
     }
 
 
-export const getGetIssuesReportQueryOptions = <TData = Awaited<ReturnType<typeof getIssuesReport>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetIssuesReportQueryOptions = <TData = Awaited<ReturnType<typeof getIssuesReport>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1281,7 +1281,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetIssuesReportQueryResult = NonNullable<Awaited<ReturnType<typeof getIssuesReport>>>
@@ -1293,7 +1293,7 @@ export type GetIssuesReportQueryError = ErrorType<void>
  */
 
 export function useGetIssuesReport<TData = Awaited<ReturnType<typeof getIssuesReport>>, TError = ErrorType<void>>(
- sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getIssuesReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -1343,7 +1343,7 @@ export const getGetValidationRulesQueryKey = (sessionId: string,) => {
     }
 
 
-export const getGetValidationRulesQueryOptions = <TData = Awaited<ReturnType<typeof getValidationRules>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetValidationRulesQueryOptions = <TData = Awaited<ReturnType<typeof getValidationRules>>, TError = ErrorType<void>>(sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1358,7 +1358,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 
 
 
-   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions} as Partial<UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetValidationRulesQueryResult = NonNullable<Awaited<ReturnType<typeof getValidationRules>>>
@@ -1370,7 +1370,7 @@ export type GetValidationRulesQueryError = ErrorType<void>
  */
 
 export function useGetValidationRules<TData = Awaited<ReturnType<typeof getValidationRules>>, TError = ErrorType<void>>(
- sessionId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ sessionId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getValidationRules>>, TError, TData>>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
@@ -1479,19 +1479,19 @@ export const getGetQualityScoreQueryKey = (sessionId: string) => {
 }
 
 export const getGetQualityScoreQueryOptions = <TData = Awaited<ReturnType<typeof getQualityScore>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetQualityScoreQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getQualityScore>>> = ({ signal }) => getQualityScore(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetQualityScoreQueryResult = NonNullable<Awaited<ReturnType<typeof getQualityScore>>>
 export type GetQualityScoreQueryError = ErrorType<void>
 
 export function useGetQualityScore<TData = Awaited<ReturnType<typeof getQualityScore>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getQualityScore>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetQualityScoreQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1515,19 +1515,19 @@ export const getGetOutliersQueryKey = (sessionId: string) => {
 }
 
 export const getGetOutliersQueryOptions = <TData = Awaited<ReturnType<typeof getOutliers>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetOutliersQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getOutliers>>> = ({ signal }) => getOutliers(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetOutliersQueryResult = NonNullable<Awaited<ReturnType<typeof getOutliers>>>
 export type GetOutliersQueryError = ErrorType<void>
 
 export function useGetOutliers<TData = Awaited<ReturnType<typeof getOutliers>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getOutliers>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetOutliersQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1551,16 +1551,16 @@ export const getGetAnomaliesQueryKey = (sessionId: string) => {
 }
 
 export const getGetAnomaliesQueryOptions = <TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetAnomaliesQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getAnomalies>>> = ({ signal }) => getAnomalies(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export function useGetAnomalies<TData = Awaited<ReturnType<typeof getAnomalies>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAnomalies>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetAnomaliesQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1584,16 +1584,16 @@ export const getGetConsistencyIssuesQueryKey = (sessionId: string) => {
 }
 
 export const getGetConsistencyIssuesQueryOptions = <TData = Awaited<ReturnType<typeof getConsistencyIssues>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetConsistencyIssuesQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getConsistencyIssues>>> = ({ signal }) => getConsistencyIssues(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export function useGetConsistencyIssues<TData = Awaited<ReturnType<typeof getConsistencyIssues>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConsistencyIssues>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetConsistencyIssuesQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1617,16 +1617,16 @@ export const getGetSchemaMeaningsQueryKey = (sessionId: string) => {
 }
 
 export const getGetSchemaMeaningsQueryOptions = <TData = Awaited<ReturnType<typeof getSchemaMeanings>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetSchemaMeaningsQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getSchemaMeanings>>> = ({ signal }) => getSchemaMeanings(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export function useGetSchemaMeanings<TData = Awaited<ReturnType<typeof getSchemaMeanings>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSchemaMeanings>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetSchemaMeaningsQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1650,19 +1650,19 @@ export const getGetAuditLogQueryKey = (sessionId: string) => {
 }
 
 export const getGetAuditLogQueryOptions = <TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetAuditLogQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getAuditLog>>> = ({ signal }) => getAuditLog(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetAuditLogQueryResult = NonNullable<Awaited<ReturnType<typeof getAuditLog>>>
 export type GetAuditLogQueryError = ErrorType<void>
 
 export function useGetAuditLog<TData = Awaited<ReturnType<typeof getAuditLog>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAuditLog>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetAuditLogQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };
@@ -1686,19 +1686,19 @@ export const getGetCleaningReportQueryKey = (sessionId: string) => {
 }
 
 export const getGetCleaningReportQueryOptions = <TData = Awaited<ReturnType<typeof getCleaningReport>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
   const queryKey = queryOptions?.queryKey ?? getGetCleaningReportQueryKey(sessionId);
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getCleaningReport>>> = ({ signal }) => getCleaningReport(sessionId, { signal, ...requestOptions });
-  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData> & { queryKey: QueryKey }
+  return { queryKey, queryFn, enabled: sessionId !== null && sessionId !== undefined, ...queryOptions } as Partial<UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>> & { queryKey: QueryKey }
 }
 
 export type GetCleaningReportQueryResult = NonNullable<Awaited<ReturnType<typeof getCleaningReport>>>
 export type GetCleaningReportQueryError = ErrorType<void>
 
 export function useGetCleaningReport<TData = Awaited<ReturnType<typeof getCleaningReport>>, TError = ErrorType<void>>(
-  sessionId: string, options?: { query?: UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>, request?: SecondParameter<typeof customFetch> }
+  sessionId: string, options?: { query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCleaningReport>>, TError, TData>>, request?: SecondParameter<typeof customFetch> }
 ): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getGetCleaningReportQueryOptions(sessionId, options);
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & { queryKey: QueryKey };

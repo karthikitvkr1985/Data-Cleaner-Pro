@@ -188,7 +188,7 @@ def _check_rule(df: pd.DataFrame, col: str, rule: ValidationRule) -> list[Sugges
             ))
 
     elif rule.rule_type == "parseable_datetime":
-        parsed = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
+        parsed = pd.to_datetime(series, errors="coerce")
         mask = series.notna() & parsed.isna()
         for idx in df.index[mask][:10]:
             suggestions.append(Suggestion(

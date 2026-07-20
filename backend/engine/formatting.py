@@ -116,7 +116,7 @@ def _find_currency_issues(series: pd.Series, col: str, original_series: pd.Serie
 def _find_date_issues(series: pd.Series, col: str) -> list[Suggestion]:
     issues = []
     try:
-        parsed = pd.to_datetime(series, errors="coerce", infer_datetime_format=True)
+        parsed = pd.to_datetime(series, errors="coerce")
         non_null = parsed.dropna()
         if len(non_null) == 0:
             return issues
