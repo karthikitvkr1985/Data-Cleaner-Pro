@@ -71,10 +71,12 @@ export function DataGrid() {
   useEffect(() => {
     if (!previewData?.rows) return;
 
-    // Store this page in the cache
-    rowCache.current.set(previewData.page, previewData.rows);
+    const pageRows = showOriginal && previewData.original_rows
+      ? previewData.original_rows
+      : previewData.rows;
 
-    // Rebuild allRows from the sorted cache so pages never duplicate
+    rowCache.current.set(previewData.page, pageRows);
+
     const sorted = [...rowCache.current.entries()]
       .sort(([a], [b]) => a - b)
       .flatMap(([, rows]) => rows);
@@ -84,7 +86,7 @@ export function DataGrid() {
     if (columns.length === 0 && previewData.columns.length > 0) {
       setColumns(previewData.columns);
     }
-  }, [previewData]);
+  }, [previewData, showOriginal]);
 
   // ── TABLE DEFINITION ──
   const columnDefs = useMemo<ColumnDef<any>[]>(() => {
