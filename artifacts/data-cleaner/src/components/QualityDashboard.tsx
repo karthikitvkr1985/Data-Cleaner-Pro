@@ -113,24 +113,25 @@ export function QualityDashboard() {
           {quality.overall_score.toFixed(1)}
         </div>
         <div className="text-xs sm:text-sm text-muted-foreground mt-1">Overall Data Quality Score</div>
-        <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground">
+        <div className="flex items-center justify-center gap-4 mt-3 text-xs text-muted-foreground/80">
           <span>{quality.row_count} rows</span>
-          <span className="text-border">·</span>
+          <span className="text-border/60">·</span>
           <span>{quality.column_count} columns</span>
-          <span className="text-border">·</span>
+          <span className="text-border/60">·</span>
           <span>{quality.dimensions.length} dimensions</span>
         </div>
         {improvement != null && (
           <div className={`mt-3 pt-3 border-t border-border/50 flex items-center justify-center gap-1.5 text-xs font-medium ${improvementColor}`}>
             <span>{improvementIcon}</span>
-            <span>{improvement >= 0 ? '+' : ''}{improvement.toFixed(1)}% from original</span>
+            <span>{improvement >= 0 ? '+' : ''}{improvement.toFixed(1)}%</span>
+            <span className="text-muted-foreground/80">from original</span>
           </div>
         )}
       </div>
 
       <div className="space-y-3">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
-          <BarChart3 className="w-3.5 h-3.5" />
+        <h3 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider flex items-center gap-2">
+          <BarChart3 className="w-3.5 h-3.5 text-foreground/60" />
           Dimension Scores
         </h3>
         <div className="space-y-2">
@@ -146,9 +147,9 @@ export function QualityDashboard() {
                     <span className="text-xs font-medium text-foreground truncate">{dim.name}</span>
                   </div>
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className={`text-xs font-bold ${textColor}`}>{score.toFixed(0)}</span>
+                    <span className={`text-sm font-bold ${textColor}`}>{score.toFixed(0)}</span>
                     {dim.total > 0 && (
-                      <span className="text-[10px] text-muted-foreground/60 w-14 text-right">{dim.passed}/{dim.total} passed</span>
+                      <span className="text-[11px] text-muted-foreground/80 w-16 text-right tabular-nums">{dim.passed}/{dim.total} passed</span>
                     )}
                   </div>
                 </div>
@@ -156,7 +157,7 @@ export function QualityDashboard() {
                   <div className={`h-full rounded-full transition-all duration-700 ease-out ${barColor}`} style={{ width: `${score}%` }} />
                 </div>
                 {dim.description && (
-                  <p className="text-[10px] text-muted-foreground/70 leading-relaxed">{dim.description}</p>
+                  <p className="text-[11px] text-muted-foreground/90 leading-relaxed">{dim.description}</p>
                 )}
               </div>
             );
@@ -166,7 +167,7 @@ export function QualityDashboard() {
 
         {(totalOutliers > 0 || totalAnomalies > 0 || totalConsistency > 0) && (
         <div className="border-t pt-4 space-y-3">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+          <h3 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider flex items-center gap-2">
             <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
             Issues Summary
           </h3>
@@ -190,10 +191,10 @@ export function QualityDashboard() {
       {meanings && meanings.length > 0 && (
         <div className="border-t pt-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+            <h3 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider flex items-center gap-2">
               <FileSearch className="w-3.5 h-3.5 text-primary" />
               Schema Meanings
-              <span className="text-[10px] text-muted-foreground/50 font-normal">({meanings.length})</span>
+              <span className="text-[10px] text-foreground/50 font-normal">({meanings.length})</span>
             </h3>
           </div>
           <div className="relative">
@@ -211,7 +212,7 @@ export function QualityDashboard() {
               <div key={m.column_name} className="flex items-center justify-between bg-card border rounded-lg px-3 py-2 hover:bg-muted/20 transition-colors overflow-hidden">
                 <div className="flex items-center gap-2 min-w-0 max-w-[60%]">
                   <span className="text-xs font-medium text-foreground truncate">{m.column_name}</span>
-                  <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded capitalize truncate">{m.inferred_meaning.replace(/_/g, ' ')}</span>
+                  <span className="text-[10px] text-foreground/80 bg-muted/60 px-1.5 py-0.5 rounded capitalize truncate">{m.inferred_meaning.replace(/_/g, ' ')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {m.is_primary_key && <span className="text-[9px] font-bold text-amber-500 bg-amber-500/10 px-1.5 py-0.5 rounded">PK</span>}
@@ -220,7 +221,7 @@ export function QualityDashboard() {
                     <div className="w-12 sm:w-16 h-1.5 bg-muted/50 rounded-full overflow-hidden">
                       <div className="h-full bg-primary rounded-full" style={{ width: `${Math.round(m.confidence * 100)}%` }} />
                     </div>
-                    <span className="text-[10px] text-muted-foreground w-8 text-right">{Math.round(m.confidence * 100)}%</span>
+                    <span className="text-[10px] text-foreground/70 w-8 text-right tabular-nums">{Math.round(m.confidence * 100)}%</span>
                   </div>
                 </div>
               </div>
@@ -229,7 +230,7 @@ export function QualityDashboard() {
           {filteredMeanings.length > 6 && (
             <button
               onClick={() => setShowAllMeanings(v => !v)}
-              className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors mx-auto"
+              className="flex items-center gap-1 text-xs text-primary hover:text-primary/90 transition-colors mx-auto font-medium"
             >
               {showAllMeanings ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
               {showAllMeanings ? 'Show less' : `Show all ${filteredMeanings.length} columns`}
@@ -239,7 +240,7 @@ export function QualityDashboard() {
       )}
 
       <div className="border-t pt-4 space-y-3">
-        <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+        <h3 className="text-xs font-semibold text-foreground/80 uppercase tracking-wider flex items-center gap-2">
           <Database className="w-3.5 h-3.5 text-emerald-500" />
           Dataset Overview
         </h3>
