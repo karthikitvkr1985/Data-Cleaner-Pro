@@ -66,7 +66,7 @@ export function ReviewQueue() {
   };
 
   const updateMutation = useUpdateSuggestion({
-    mutation: { onSuccess: invalidate, onError },
+    mutation: { onSuccess: () => { invalidate(); bumpDataGeneration(); }, onError },
   } as any);
 
   const bulkMutation = useBulkUpdateSuggestions({

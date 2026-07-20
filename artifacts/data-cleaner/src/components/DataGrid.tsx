@@ -58,17 +58,14 @@ export function DataGrid() {
     return map;
   }, [suggestionsData]);
 
-  // Accumulate rows per page; reset cache when showOriginal, sessionId, or
-  // dataGeneration changes (dataGeneration is bumped after bulk mutations
-  // so stale cached pages don't produce an empty table).
+  // Reset to page 0 and refetch when dataGeneration changes (bumped after
+  // mutations). Keep old rows visible while fetching so the table doesn't
+  // flash empty.
   useEffect(() => {
+    if (!sessionId) return;
     rowCache.current = new Map();
-    setAllRows([]);
     setPage(0);
-    if (sessionId) {
-      queryClient.cancelQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
-      queryClient.removeQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
-    }
+    queryClient.refetchQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
   }, [showOriginal, sessionId, dataGeneration, queryClient]);
 
   useEffect(() => {
