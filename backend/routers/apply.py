@@ -46,10 +46,12 @@ def _apply_suggestion_to_df(df: pd.DataFrame, suggestion: Suggestion) -> pd.Data
 
     if suggestion.row_index is not None:
         col = suggestion.column_name
-        if col in df.columns and suggestion.row_index < len(df):
+        if suggestion.category == "duplicate":
+            if suggestion.row_index in df.index:
+                df = df.drop(index=suggestion.row_index)
+        elif col in df.columns and suggestion.row_index in df.index:
             df.at[suggestion.row_index, col] = value
     else:
-        # Column-level suggestions: apply to whole column
         col = suggestion.column_name
         if col not in df.columns:
             return df
@@ -71,9 +73,10 @@ def _apply_suggestion_to_df(df: pd.DataFrame, suggestion: Suggestion) -> pd.Data
             else:
                 df[col] = df[col].fillna(value)
         elif cat == "duplicate":
-            if suggestion.row_index is None and "Drop duplicate row" in suggestion.reason:
-                # handled at row level when row_index is set
-                pass
+            if suggestion.original_value is not None and suggestion.proposed_value is not None:
+                df[col] = df[col].replace(suggestion.original_value, suggestion.proposed_value)
+            else:
+                df = df.drop_duplicates(keep="first")
     return df
 
 
