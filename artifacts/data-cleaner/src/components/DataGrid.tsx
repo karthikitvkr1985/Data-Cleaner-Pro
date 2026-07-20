@@ -6,6 +6,7 @@ import {
   flexRender,
   type ColumnDef,
 } from '@tanstack/react-table';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useGetPreview,
   useGetSuggestions,
@@ -20,7 +21,8 @@ import { Label } from '@/components/ui/label';
 const PAGE_SIZE = 100;
 
 export function DataGrid() {
-  const { sessionId, selectedColumn, setSelectedColumn, setActivePanel } = useSessionStore();
+  const { sessionId, selectedColumn, setSelectedColumn, setActivePanel, dataGeneration } = useSessionStore();
+  const queryClient = useQueryClient();
   const [showOriginal, setShowOriginal] = useState(false);
   const [page, setPage] = useState(0);
 
@@ -56,12 +58,18 @@ export function DataGrid() {
     return map;
   }, [suggestionsData]);
 
-  // Accumulate rows per page; reset cache when showOriginal or sessionId changes
+  // Accumulate rows per page; reset cache when showOriginal, sessionId, or
+  // dataGeneration changes (dataGeneration is bumped after bulk mutations
+  // so stale cached pages don't produce an empty table).
   useEffect(() => {
     rowCache.current = new Map();
     setAllRows([]);
     setPage(0);
-  }, [showOriginal, sessionId]);
+    if (sessionId) {
+      queryClient.cancelQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
+      queryClient.removeQueries({ queryKey: getGetPreviewQueryKey(sessionId) });
+    }
+  }, [showOriginal, sessionId, dataGeneration, queryClient]);
 
   useEffect(() => {
     if (!previewData?.rows) return;
